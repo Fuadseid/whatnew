@@ -1,9 +1,13 @@
+import PostVideo from "./component/Postvideo";
+import Showvideo from "./component/Showvideo";
+import Sidebar from "./component/Sidebar";
+
 function Home() {
-    return (
-        <div>
-            heyyyy
-        </div>
-    )
+  return (
+    <div>
+      <Sidebar />
+    </div>
+  );
 }
 
-export default Home
+export default Home;
