@@ -34,18 +34,26 @@ export const forgetPassword = createAsyncThunk(
   }
 );
 export const showvideo = createAsyncThunk(
-  "video/showAll",  
-  async (_, { rejectWithValue }) => {
+  "video/showAll",
+  async (_, { rejectWithValue, getState }) => {
+    const { auth } = getState();
+    if (!auth.isAuthenticated || !auth.token) {
+      return rejectWithValue({ message: "Not authenticated" });
+    }
     try {
-      const response = await api.get("/showvideo"); 
+      const response = await api.get("/showvideo",{
+        headers: {
+          "Authorization": `Bearer ${auth.token}`
+        }
+      });
       console.log("API response data:", response.data);
 
       return response.data;
     } catch (e) {
-      return rejectWithValue( 
+      return rejectWithValue(
         e.response.data || {
           message: "Failed to fetch videos",
-          status: e.response.status
+          status: e.response.status,
         }
       );
     }
@@ -54,11 +62,17 @@ export const showvideo = createAsyncThunk(
 
 export const postvideo = createAsyncThunk(
   "video/post",
-  async (formData, { rejectWithValue }) => {
+  async (formData, { rejectWithValue, getState }) => {
+    const { auth } = getState();
+
+    if (!auth.isAuthenticated || !auth.token) {
+      return rejectWithValue({ message: "Not authenticated" });
+    }
     try {
       const response = await api.post("/post-video", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${auth.token}`
         },
       });
       return response.data;
@@ -178,7 +192,6 @@ const initialState = {
     data: null,
     currentVideo: null,
   },
-  
 };
 
 const authSlice = createSlice({
@@ -222,8 +235,8 @@ const authSlice = createSlice({
     builder.addCase(showvideo.fulfilled, (state, action) => {
       state.video.loading = false;
       state.video.success = true;
-      state.video.data = action.payload;  
-      console.log("datalll:",state.video.data )
+      state.video.data = action.payload;
+      console.log("datalll:", state.video.data);
     });
     builder.addCase(showvideo.rejected, (state, action) => {
       state.video.loading = false;

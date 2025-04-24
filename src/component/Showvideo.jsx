@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { showvideo, selectVideoState } from "../redux/slicer";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiHeart,
@@ -17,6 +18,10 @@ function Showvideo() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const videoRefs = useRef([]);
   const containerRef = useRef();
+  const isAuthenticated = useSelector(state => state.auth.isAuthenticated??false);
+  
+  const navigate = useNavigate();
+
   const [isPlaying, setIsPlaying] = useState(() => {
     const initialStates = Array(data?.length || 0).fill(false);
     initialStates[0] = true; 
@@ -25,6 +30,9 @@ function Showvideo() {
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    } else {
     dispatch(showvideo())
       .unwrap()
       .then((data) => {
@@ -34,7 +42,8 @@ function Showvideo() {
         setIsPlaying(initialStates);
       })
       .catch((err) => console.error("Error:", err));
-  }, [dispatch]);
+    }
+  }, [dispatch,isAuthenticated, navigate]);
 
   // Handle scroll events
   useEffect(() => {

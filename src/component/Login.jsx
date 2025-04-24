@@ -57,7 +57,7 @@ function Login() {
       const result = await dispatch(postLogin(credentials)).unwrap();
       
       if (result) {
-        navigate('/');
+        navigate('/showvideo');
       }
     } catch (error) {
       console.error("Login error:", error);
