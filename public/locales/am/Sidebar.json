@@ -1,0 +1,18 @@
+{
+    "appName": "ምን አዲስ ነው?",
+    "navItems": {
+      "forYou": "ለአንተ",
+      "following": "በሚከተሉ",
+      "discover": "ፈልግ",
+      "upload": "ስቀል",
+      "language": "ቋንቋ",
+      "profile": "መገለጫ",
+      "logout": "ውጣ"
+    },
+    "newBadge": "አዲስ",
+    "expandTooltip": "ለመዘርጋት ጠቅ ያድርጉ",
+    "user": {
+      "username": "የተጠቃሚ ስም",
+      "handle": "@የተጠቃሚስም"
+    }
+  }

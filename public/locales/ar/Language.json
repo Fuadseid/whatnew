@@ -1,0 +1,11 @@
+{
+    "title": "اختر اللغة",
+    "subtitle": "اختر لغتك المفضلة لأفضل تجربة",
+    "languageCount": "{{count}} لغات",
+    "searchPlaceholder": "ابحث عن اللغات...",
+    "noResults": "لم يتم العثور على لغات تطابق \"{searchTerm}\"",
+    "confirmButton": "تأكيد الاختيار",
+    "didYouKnow": "هل تعلم؟",
+    "translationCoverage": "تدعم منصتنا {{count}} لغة، تغطي 95% من مستخدمي الإنترنت في العالم.",
+    "helpTranslate": "ساعدنا في الترجمة إلى المزيد من اللغات"
+  }

@@ -1,0 +1,51 @@
+{
+    "header": {
+      "title": "Comparte Tu Historia",
+      "subtitle": "¡Tu audiencia te espera! Sube un video y conéctate con ellos."
+    },
+    "upload": {
+      "dragDrop": "Arrastra y suelta tu video aquí",
+      "selectFiles": "Seleccionar Archivos",
+      "requirements": "MP4, WebM o MOV. Máx. 100MB.",
+      "uploading": "Subiendo...",
+      "success": "¡Subida completada con éxito!",
+      "processing": "Tu video está siendo procesado y estará disponible pronto.",
+      "postButton": "Publicar Video"
+    },
+    "thumbnail": {
+      "label": "Miniatura del Video",
+      "placeholder": "Sube una miniatura que represente tu video",
+      "change": "Haz clic en la imagen para cambiarla"
+    },
+    "form": {
+      "title": {
+        "label": "Título del Video",
+        "placeholder": "¿De qué trata tu video?",
+        "hint": "Hazlo llamativo y descriptivo"
+      },
+      "description": {
+        "label": "Descripción",
+        "placeholder": "Cuéntales a los espectadores de qué trata tu video...",
+        "hint": "Esto ayuda a las personas a descubrir tu contenido"
+      },
+      "required": "(Requerido)"
+    },
+    "errors": {
+      "validation": "Por favor completa todos los campos y selecciona tanto un video como una miniatura.",
+      "upload": "Ocurrió un error durante la subida. Consulta la consola para más detalles."
+    },
+    "progress": {
+      "uploading": "Subiendo tu video...",
+      "percentage": "{{progress}}%",
+      "hint": "Esto puede tardar unos momentos. Por favor no cierres esta ventana."
+    },
+    "tips": {
+      "title": "CONSEJOS DE VIDEO",
+      "items": {
+           "quality": "Usa video de alta calidad (720p o superior)",
+          "duration": "Mantén los videos bajo 5 minutos para mejor engagement",
+       "description": "Añade un título descriptivo y descripción detallada",
+         "thumbnail": "Elige una miniatura llamativa"
+      }
+    }
+  }

@@ -1,0 +1,51 @@
+{
+    "header": {
+      "title": "Share Your Story",
+      "subtitle": "Your audience is waiting! Upload a video and connect with them."
+    },
+    "upload": {
+      "dragDrop": "Drag and drop your video here",
+      "selectFiles": "Select Files",
+      "requirements": "MP4, WebM or MOV. Max 100MB.",
+      "uploading": "Uploading...",
+      "success": "Upload completed successfully!",
+      "processing": "Your video is now being processed and will be available shortly.",
+      "postButton": "Post Video"
+    },
+    "thumbnail": {
+      "label": "Video Thumbnail",
+      "placeholder": "Upload a thumbnail that represents your video",
+      "change": "Click the image to change"
+    },
+    "form": {
+      "title": {
+        "label": "Video Title",
+        "placeholder": "What's your video about?",
+        "hint": "Make it catchy and descriptive"
+      },
+      "description": {
+        "label": "Description",
+        "placeholder": "Tell viewers what your video is about...",
+        "hint": "This helps people discover your content"
+      },
+      "required": "(Required)"
+    },
+    "errors": {
+      "validation": "Please fill in all fields and select both a video and a thumbnail.",
+      "upload": "An error occurred during upload. Check console for details."
+    },
+    "progress": {
+      "uploading": "Uploading your video...",
+      "percentage": "{{progress}}%",
+      "hint": "This may take a few moments. Please don't close this window."
+    },
+    "tips": {
+      "title": "VIDEO TIPS",
+      "items": {
+           "quality": "Use high-quality video (720p or higher)",
+          "duration": "Keep videos under 5 minutes for best engagement",
+       "description": "Add a descriptive title and detailed description",
+         "thumbnail": "Choose an eye-catching thumbnail"
+      }
+    }
+  }

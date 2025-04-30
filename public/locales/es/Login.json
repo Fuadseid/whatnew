@@ -1,0 +1,12 @@
+{
+    "title": "Iniciar sesión en tu cuenta",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "login": "Iniciar sesión",
+    "remember": "Recuérdame",
+    "forgot": "¿Olvidaste tu contraseña?",
+    "create": "Crear una cuenta nueva",
+    "load": "Cargando...",
+    "emailplaceholder": "Tu correo electrónico",
+    "passwordPlaceholder": "Ingresa tu contraseña"
+  }

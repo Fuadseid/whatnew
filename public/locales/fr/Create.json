@@ -1,0 +1,30 @@
+{
+    "title": "Créer un compte",
+    "name": "Nom",
+    "username": "Nom d'utilisateur",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "confirm_password": "Confirmer le mot de passe",
+    "user_type": "Rôle",
+    "news_enthusiast": "Passionné d'actualités",
+    "content_creator": "Créateur de contenu",
+    "admin": "Administrateur",
+    "name_placeholder": "Votre nom complet",
+    "username_placeholder": "Choisissez un nom d'utilisateur",
+    "email_placeholder": "votre.email@exemple.com",
+    "password_placeholder": "Créer un mot de passe",
+    "confirm_password_placeholder": "Confirmer le mot de passe",
+    "submit": "S'inscrire",
+    "loading": "Traitement en cours...",
+    "login_link": "Vous avez déjà un compte ?",
+    "sign_in": "Se connecter",
+    "errors": {
+      "name_required": "Le nom est requis",
+      "username_required": "Le nom d'utilisateur est requis",
+      "email_required": "L'e-mail est requis",
+      "email_invalid": "L'e-mail est invalide",
+      "password_required": "Le mot de passe est requis",
+      "password_length": "Le mot de passe doit contenir au moins 8 caractères",
+      "password_mismatch": "Les mots de passe ne correspondent pas"
+    }
+  }

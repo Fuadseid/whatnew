@@ -1,0 +1,30 @@
+{
+    "title": "አካውንት ይክፈቱ",
+    "name": "ስም",
+    "username": "የተጠቃሚ ስም",
+    "email": "ኢሜይል",
+    "password": "የይለፍ ቃል",
+    "confirm_password": "የይለፍ ቃሎንሎን ያረጋግጡ",
+    "user_type": "የተጠቃሚ አይነት",
+    "news_enthusiast": "ዜና ተከታታይ",
+    "content_creator": "ይዘት ፈጣሪ",
+    "admin": "አስተዳዳሪ",
+    "name_placeholder": "ሙሉ ስምዎን ያስገቡ",
+    "username_placeholder": "የተጠቃሚ ስም ይምረጡ",
+    "email_placeholder": "ኢሜይሎን ያስገቡ",
+    "password_placeholder": "የይለፍ ቃል ይፍጠሩ",
+    "confirm_password_placeholder": "የይለፍ ቃል ያረጋግጡ",
+    "submit": "ይመዝገቡ",
+    "loading": "በማስገባት ላይ...",
+    "login_link": "ቀድሞውኑ መለያ አለዎት?",
+    "sign_in": "ግባ",
+    "errors": {
+      "name_required": "ስም ያስፈልጋል",
+      "username_required": "የተጠቃሚ ስም ያስፈልጋል",
+      "email_required": "ኢሜይል ያስፈልጋል",
+      "email_invalid": "ኢሜይል ልክ አይደለም",
+      "password_required": "የይለፍ ቃል ያስፈልጋል",
+      "password_length": "የይለፍ ቃል ቢያንስ 8 ቁምፊ ሊኖረው ይገባል",
+      "password_mismatch": "የይለፍ ቃሎች አንድ አይነት አይደሉም"
+    }
+  }

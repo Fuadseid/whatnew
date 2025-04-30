@@ -1,0 +1,18 @@
+{
+    "appName": "Quoi de neuf",
+    "navItems": {
+      "forYou": "Pour vous",
+      "following": "Abonnements",
+      "discover": "Découvrir",
+      "upload": "Télécharger",
+      "language": "Langue",
+      "profile": "Profil",
+      "logout": "Déconnexion"
+    },
+    "newBadge": "Nouveau",
+    "expandTooltip": "Cliquez pour développer",
+    "user": {
+      "username": "Nom d'utilisateur",
+      "handle": "@utilisateur"
+    }
+  }

@@ -1,0 +1,11 @@
+{
+    "title": "选择语言",
+    "subtitle": "选择您喜欢的语言以获得最佳体验",
+    "languageCount": "{{count}} 种语言",
+    "searchPlaceholder": "搜索语言...",
+    "noResults": "未找到与\"{searchTerm}\"匹配的语言",
+    "confirmButton": "确认选择",
+    "didYouKnow": "你知道吗？",
+    "translationCoverage": "我们的平台支持 {{count}} 种语言，覆盖全球 95% 的互联网用户。",
+    "helpTranslate": "帮助我们翻译更多语言"
+  }

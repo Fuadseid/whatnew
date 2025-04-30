@@ -1,0 +1,51 @@
+{
+    "header": {
+      "title": "分享您的故事",
+      "subtitle": "您的观众正在等待！上传视频并与他们联系。"
+    },
+    "upload": {
+      "dragDrop": "将您的视频拖放到此处",
+      "selectFiles": "选择文件",
+      "requirements": "MP4、WebM或MOV。最大100MB。",
+      "uploading": "上传中...",
+      "success": "上传成功完成！",
+      "processing": "您的视频正在处理中，很快就会可用。",
+      "postButton": "发布视频"
+    },
+    "thumbnail": {
+      "label": "视频缩略图",
+      "placeholder": "上传代表您视频的缩略图",
+      "change": "点击图片进行更改"
+    },
+    "form": {
+      "title": {
+        "label": "视频标题",
+        "placeholder": "您的视频是关于什么的？",
+        "hint": "使其引人注目且具有描述性"
+      },
+      "description": {
+        "label": "描述",
+        "placeholder": "告诉观众您的视频内容...",
+        "hint": "这有助于人们发现您的内容"
+      },
+      "required": "(必填)"
+    },
+    "errors": {
+      "validation": "请填写所有字段并选择视频和缩略图。",
+      "upload": "上传过程中发生错误。查看控制台获取详细信息。"
+    },
+    "progress": {
+      "uploading": "正在上传您的视频...",
+      "percentage": "{{progress}}%",
+      "hint": "这可能需要一些时间。请不要关闭此窗口。"
+    },
+    "tips": {
+      "title": "视频提示",
+      "items": {
+       "quality": "使用高质量视频（720p或更高）",
+       "duration": "将视频保持在5分钟以内以获得最佳参与度",
+       "description": "添加描述性标题和详细说明",
+       "thumbnail": "选择吸引人的缩略图"
+      }
+    }
+  }

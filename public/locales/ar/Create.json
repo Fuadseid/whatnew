@@ -1,0 +1,30 @@
+{
+    "title": "إنشاء حساب",
+    "name": "الاسم",
+    "username": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "confirm_password": "تأكيد كلمة المرور",
+    "user_type": "الدور",
+    "news_enthusiast": "مهتم بالأخبار",
+    "content_creator": "منشئ محتوى",
+    "admin": "مسؤول",
+    "name_placeholder": "اسمك الكامل",
+    "username_placeholder": "اختر اسم مستخدم",
+    "email_placeholder": "بريدك الإلكتروني",
+    "password_placeholder": "إنشاء كلمة مرور",
+    "confirm_password_placeholder": "تأكيد كلمة المرور",
+    "submit": "تسجيل",
+    "loading": "جاري المعالجة...",
+    "login_link": "هل لديك حساب بالفعل؟",
+    "sign_in": "تسجيل الدخول",
+    "errors": {
+      "name_required": "الاسم مطلوب",
+      "username_required": "اسم المستخدم مطلوب",
+      "email_required": "البريد الإلكتروني مطلوب",
+      "email_invalid": "البريد الإلكتروني غير صالح",
+      "password_required": "كلمة المرور مطلوبة",
+      "password_length": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+      "password_mismatch": "كلمات المرور غير متطابقة"
+    }
+  }

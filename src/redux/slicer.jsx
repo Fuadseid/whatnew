@@ -4,10 +4,7 @@ import axios from "axios";
 const api = axios.create({
   baseURL: "http://localhost:8000/api",
 });
-const token = localStorage.getItem("token");
-if (token) {
-  api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-}
+
 const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -17,6 +14,11 @@ const setAuthToken = (token) => {
     localStorage.removeItem("token");
   }
 };
+
+const token = localStorage.getItem("token");
+if (token) {
+  setAuthToken(token);
+}
 
 export const forgetPassword = createAsyncThunk(
   "auth/forgetPassword",
@@ -33,6 +35,7 @@ export const forgetPassword = createAsyncThunk(
     }
   }
 );
+
 export const showvideo = createAsyncThunk(
   "video/showAll",
   async (_, { rejectWithValue, getState }) => {
@@ -41,19 +44,17 @@ export const showvideo = createAsyncThunk(
       return rejectWithValue({ message: "Not authenticated" });
     }
     try {
-      const response = await api.get("/showvideo",{
+      const response = await api.get("/showvideo", {
         headers: {
-          "Authorization": `Bearer ${auth.token}`
-        }
+          Authorization: `Bearer ${auth.token}`,
+        },
       });
-      console.log("API response data:", response.data);
-
       return response.data;
-    } catch (e) {
+    } catch (error) {
       return rejectWithValue(
-        e.response.data || {
+        error.response?.data || {
           message: "Failed to fetch videos",
-          status: e.response.status,
+          status: error.response?.status,
         }
       );
     }
@@ -62,34 +63,32 @@ export const showvideo = createAsyncThunk(
 
 export const postvideo = createAsyncThunk(
   "video/post",
-  async (formData, { rejectWithValue, getState }) => {
-    const { auth } = getState();
+  async (formData,{rejectWithValue,getState }) => {
+    const {auth} = getState();
+    if(!auth.isAuthenticated||!auth.token){
+return rejectWithValue({message:"Not authenticated"});  }
+try{
+    formData.forEach((value, key) => {
+        console.log(key, value);
+      });   
+       const response =  await api.post("/post-video", formData,{
+    headers:{
+      Authorization: `Bearer ${auth.token}`,
+      'Content-Type': 'multipart/form-data',
 
-    if (!auth.isAuthenticated || !auth.token) {
-      return rejectWithValue({ message: "Not authenticated" });
     }
-    try {
-      const response = await api.post("/post-video", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${auth.token}`
-        },
-      });
-      return response.data;
-    } catch (error) {
-      if (error.response?.status === 401) {
-        // Token might be expired - you might want to logout here
-        localStorage.removeItem("token");
-        window.location.reload();
-      }
-      return rejectWithValue(
-        error.response?.data || {
-          message: "Video upload failed. Please try again.",
-        }
-      );
-    }
+   } );
+   return response.data;
+}catch(error){
+  return rejectWithValue(
+   {
+message:`Error Uploading the video ${error}`,
+  }
+  )
+}
   }
 );
+
 export const resetPassword = createAsyncThunk(
   "auth/resetPassword",
   async (
@@ -167,6 +166,7 @@ export const checkAuth = createAsyncThunk(
   }
 );
 
+// Initial State
 const initialState = {
   user: null,
   token: null,
@@ -188,12 +188,15 @@ const initialState = {
   video: {
     loading: false,
     error: null,
+    errors: null,
     success: false,
     data: null,
-    currentVideo: null,
+    uploadProgress: 0,
+    status: null,
   },
 };
 
+// Slice
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -201,12 +204,9 @@ const authSlice = createSlice({
     resetAuthState: (state) => {
       state.error = null;
       state.success = false;
-      state.forgetPassword.error = null;
-      state.forgetPassword.success = false;
-      state.resetPassword.error = null;
-      state.resetPassword.success = false;
-      state.video.error = null;
-      state.video.success = false;
+      state.forgetPassword = initialState.forgetPassword;
+      state.resetPassword = initialState.resetPassword;
+      state.video = { ...initialState.video, data: state.video.data };
     },
     logout: (state) => {
       state.user = null;
@@ -214,113 +214,119 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       setAuthToken(null);
     },
+    
   },
   extraReducers: (builder) => {
-    builder.addCase(postLogin.pending, (state) => {
-      state.isLoading = true;
-      state.error = null;
-    });
-    builder.addCase(postLogin.fulfilled, (state, action) => {
-      state.isLoading = false;
-      state.user = action.payload.user;
-      state.token = action.payload.token;
-      state.isAuthenticated = true;
-      state.success = true;
-    });
-    builder.addCase(showvideo.pending, (state) => {
-      state.video.loading = true;
-      state.video.error = null;
-      state.video.success = false;
-    });
-    builder.addCase(showvideo.fulfilled, (state, action) => {
-      state.video.loading = false;
-      state.video.success = true;
-      state.video.data = action.payload;
-      console.log("datalll:", state.video.data);
-    });
-    builder.addCase(showvideo.rejected, (state, action) => {
-      state.video.loading = false;
-      state.video.error = action.payload;
-    });
-    builder.addCase(postLogin.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-      state.isAuthenticated = false;
-    });
+    builder
+      // Login
+      .addCase(postLogin.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(postLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+        state.success = true;
+      })
+      .addCase(postLogin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+        state.isAuthenticated = false;
+      })
 
-    builder.addCase(postRegister.pending, (state) => {
-      state.isLoading = true;
-      state.error = null;
-    });
-    builder.addCase(postRegister.fulfilled, (state) => {
-      state.isLoading = false;
-      state.success = true;
-    });
-    builder.addCase(postRegister.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-    });
+      // Register
+      .addCase(postRegister.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(postRegister.fulfilled, (state) => {
+        state.isLoading = false;
+        state.success = true;
+      })
+      .addCase(postRegister.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
 
-    builder.addCase(forgetPassword.pending, (state) => {
-      state.forgetPassword.loading = true;
-      state.forgetPassword.error = null;
-      state.forgetPassword.success = false;
-    });
-    builder.addCase(forgetPassword.fulfilled, (state, action) => {
-      state.forgetPassword.loading = false;
-      state.forgetPassword.success = true;
-      state.forgetPassword.emailSent = action.meta.arg;
-    });
-    builder.addCase(forgetPassword.rejected, (state, action) => {
-      state.forgetPassword.loading = false;
-      state.forgetPassword.error = action.payload;
-    });
+      // Check Auth
+      .addCase(checkAuth.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(checkAuth.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+      })
+      .addCase(checkAuth.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+        state.isAuthenticated = false;
+      })
 
-    builder.addCase(resetPassword.pending, (state) => {
-      state.resetPassword.loading = true;
-      state.resetPassword.error = null;
-      state.resetPassword.success = false;
-    });
-    builder.addCase(resetPassword.fulfilled, (state) => {
-      state.resetPassword.loading = false;
-      state.resetPassword.success = true;
-    });
-    builder.addCase(resetPassword.rejected, (state, action) => {
-      state.resetPassword.loading = false;
-      state.resetPassword.error = action.payload;
-    });
+      // Forget Password
+      .addCase(forgetPassword.pending, (state) => {
+        state.forgetPassword.loading = true;
+        state.forgetPassword.error = null;
+      })
+      .addCase(forgetPassword.fulfilled, (state, action) => {
+        state.forgetPassword.loading = false;
+        state.forgetPassword.success = true;
+        state.forgetPassword.emailSent = action.meta.arg;
+      })
+      .addCase(forgetPassword.rejected, (state, action) => {
+        state.forgetPassword.loading = false;
+        state.forgetPassword.error = action.payload;
+      })
 
-    builder.addCase(checkAuth.pending, (state) => {
-      state.isLoading = true;
-    });
-    builder.addCase(checkAuth.fulfilled, (state, action) => {
-      state.isLoading = false;
-      state.user = action.payload.user;
-      state.isAuthenticated = true;
-    });
-    builder.addCase(checkAuth.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-      state.isAuthenticated = false;
-    });
-    builder.addCase(postvideo.pending, (state) => {
-      state.video.loading = true;
-      state.video.error = null;
-      state.video.success = false;
-    });
-    builder.addCase(postvideo.fulfilled, (state, action) => {
-      state.video.loading = false;
-      state.video.success = true;
-      state.video.data = action.payload;
-    });
-    builder.addCase(postvideo.rejected, (state, action) => {
-      state.video.loading = false;
-      state.video.error = action.payload;
-    });
+      // Reset Password
+      .addCase(resetPassword.pending, (state) => {
+        state.resetPassword.loading = true;
+        state.resetPassword.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.resetPassword.loading = false;
+        state.resetPassword.success = true;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.resetPassword.loading = false;
+        state.resetPassword.error = action.payload;
+      })
+
+      // Show Video
+      .addCase(showvideo.pending, (state) => {
+        state.video.loading = true;
+      })
+      .addCase(showvideo.fulfilled, (state, action) => {
+        state.video.loading = false;
+        state.video.success = true;
+        state.video.data = action.payload;
+      })
+      .addCase(showvideo.rejected, (state, action) => {
+        state.video.loading = false;
+        state.video.error = action.payload;
+      })
+
+      // Post Video
+      .addCase(postvideo.pending, (state) => {
+        state.video.loading = true;
+      })
+      .addCase(postvideo.fulfilled, (state) => {
+        state.video.loading = false;
+        state.video.success = true;
+      })
+      .addCase(postvideo.rejected, (state, action) => {
+        state.video.loading = false;
+        state.video.error = action.payload;
+      });
   },
 });
 
-export const { resetAuthState, logout } = authSlice.actions;
+// Exports
+export const { resetAuthState, logout, setUploadProgress } = authSlice.actions;
+
+// Selectors
 export const selectVideoState = (state) => state.auth.video;
 export const selectCurrentUser = (state) => state.auth.user;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;

@@ -3,8 +3,11 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { postLogin, resetAuthState } from "../redux/slicer";
+import { useTranslation } from "react-i18next";
 
 function Login() {
+  const {t}= useTranslation();
+
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
@@ -13,7 +16,7 @@ function Login() {
   const [errors, setErrors] = useState({});
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isLoading, error, isAuthenticated } = useSelector((state) => state.auth);
+  const { isLoading, error } = useSelector((state) => state.auth);
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -77,7 +80,7 @@ function Login() {
         onSubmit={handleSubmit}
       >
         <h1 className="text-center text-2xl font-bold text-gray-800 mb-4">
-          Login to your account
+           {t("title")}
         </h1>
 
         {/* Error Message */}
@@ -97,7 +100,7 @@ function Login() {
 
         <div className="flex flex-col space-y-1">
           <label htmlFor="email" className="text-sm font-medium text-gray-700">
-            Email *
+           {t("email")}
           </label>
           <input
             type="email"
@@ -105,7 +108,7 @@ function Login() {
             name="email"
             value={credentials.email}
             onChange={handleInput}
-            placeholder="your.email@example.com"
+            placeholder={t('emailplaceholder')}
             className={`border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
           />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -114,10 +117,12 @@ function Login() {
         <div className="flex flex-col space-y-1">
           <div className="flex justify-between items-center">
             <label htmlFor="password" className="text-sm font-medium text-gray-700">
-              Password *
+            {t("password")}
+
             </label>
             <Link to="/forget-password" className="text-sm text-blue-600 hover:underline">
-              Forgot password?
+            {t("forgot")} ?
+
             </Link>
           </div>
           <input
@@ -126,7 +131,7 @@ function Login() {
             name="password"
             value={credentials.password}
             onChange={handleInput}
-            placeholder="Enter your password"
+            placeholder={t('passwordPlaceholder')}
             className={`border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
           />
           {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
@@ -143,18 +148,18 @@ function Login() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Logging in...
+              {t('load')}...
             </span>
-          ) : 'Log in'}
+          ) : t('login')}
         </button>
 
         <p className="text-center text-sm text-gray-600 mt-4">
-          Don't have an account?{" "}
+         {t("remember")}?{" "}
           <Link
             to="/register"
             className="text-blue-600 hover:underline font-medium"
           >
-            Create Account
+            {t("create")}
           </Link>
         </p>
       </form>

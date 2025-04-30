@@ -1,0 +1,18 @@
+{
+    "appName": "What's New",
+    "navItems": {
+      "forYou": "For You",
+      "following": "Following",
+      "discover": "Discover",
+      "upload": "Upload",
+      "language": "Language",
+      "profile": "Profile",
+      "logout": "Logout"
+    },
+    "newBadge": "New",
+    "expandTooltip": "Click to expand",
+    "user": {
+      "username": "Username",
+      "handle": "@username"
+    }
+  }

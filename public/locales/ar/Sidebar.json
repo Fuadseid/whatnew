@@ -1,0 +1,18 @@
+{
+    "appName": "ما الجديد",
+    "navItems": {
+      "forYou": "من أجلك",
+      "following": "متابَعون",
+      "discover": "اكتشف",
+      "upload": "رفع",
+      "language": "اللغة",
+      "profile": "الملف الشخصي",
+      "logout": "تسجيل خروج"
+    },
+    "newBadge": "جديد",
+    "expandTooltip": "انقر للتوسيع",
+    "user": {
+      "username": "اسم المستخدم",
+      "handle": "@اسم المستخدم"
+    }
+  }

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { postRegister, resetAuthState } from "../redux/slicer";
-
+import { useTranslation } from "react-i18next";
 function Registration() {
   const [formData, setFormData] = useState({
     name: "",
@@ -18,7 +18,7 @@ function Registration() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isLoading, error } = useSelector((state) => state.auth);
-
+const { t } = useTranslation('Create');
   const handleInput = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -105,7 +105,7 @@ function Registration() {
         onSubmit={handleSubmit}
       >
         <h1 className="text-center text-2xl font-bold text-gray-800 mb-4">
-          Create account
+         {t('title')}
         </h1>
 
         {error && (
@@ -127,7 +127,7 @@ function Registration() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col space-y-1">
             <label htmlFor="name" className="text-sm font-medium text-gray-700">
-              Name *
+            {t('name')}
             </label>
             <input
               type="text"
@@ -135,7 +135,7 @@ function Registration() {
               name="name"
               value={formData.name}
               onChange={handleInput}
-              placeholder="Your full name"
+              placeholder={t('name_placeholder')}
               className={`border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
             />
             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
@@ -143,7 +143,8 @@ function Registration() {
 
           <div className="flex flex-col space-y-1">
             <label htmlFor="username" className="text-sm font-medium text-gray-700">
-              Username *
+            {t('username')}
+
             </label>
             <input
               type="text"
@@ -151,7 +152,7 @@ function Registration() {
               name="username"
               value={formData.username}
               onChange={handleInput}
-              placeholder="Choose a username"
+              placeholder= {t('username_placeholder')}
               className={`border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
             />
             {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
@@ -160,7 +161,7 @@ function Registration() {
 
         <div className="flex flex-col space-y-1">
           <label htmlFor="email" className="text-sm font-medium text-gray-700">
-            Email *
+            {t('email')}
           </label>
           <input
             type="email"
@@ -168,7 +169,7 @@ function Registration() {
             name="email"
             value={formData.email}
             onChange={handleInput}
-            placeholder="your.email@example.com"
+            placeholder={t('email_placeholder')}
             className={`border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
           />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -177,7 +178,7 @@ function Registration() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col space-y-1">
             <label htmlFor="password" className="text-sm font-medium text-gray-700">
-              Password *
+              {t('password')}
             </label>
             <input
               type="password"
@@ -185,7 +186,7 @@ function Registration() {
               name="password"
               value={formData.password}
               onChange={handleInput}
-              placeholder="Create password"
+              placeholder={t('password_placeholder')}
               className={`border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
             />
             {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
@@ -193,7 +194,7 @@ function Registration() {
 
           <div className="flex flex-col space-y-1">
             <label htmlFor="confirm_password" className="text-sm font-medium text-gray-700">
-              Confirm Password *
+              {t('confirm_password')}
             </label>
             <input
               type="password"
@@ -201,7 +202,7 @@ function Registration() {
               name="confirm_password"
               value={formData.confirm_password}
               onChange={handleInput}
-              placeholder="Confirm password"
+              placeholder={t('confirm_password_placeholder')}
               className={`border ${errors.confirm_password ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
             />
             {errors.confirm_password && <p className="text-red-500 text-xs mt-1">{errors.confirm_password}</p>}
@@ -210,7 +211,7 @@ function Registration() {
 
         <div className="flex flex-col space-y-1">
           <label htmlFor="user_type" className="text-sm font-medium text-gray-700">
-            Role
+            {t('user_type')}
           </label>
           <select
             id="user_type"
@@ -219,9 +220,8 @@ function Registration() {
             onChange={handleInput}
             className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="news_enthusiast">News Enthusiast</option>
-            <option value="content_creator">Content Creator</option>
-            <option value="admin">Admin</option>
+            <option value="news_enthusiast">{t('news_enthusiast')}</option>
+            <option value="content_creator">{t('content_creator')}</option>
           </select>
         </div>
 
@@ -236,18 +236,18 @@ function Registration() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Processing...
+             {t('loading')}
             </span>
-          ) : 'Register'}
+          ) : t('submit')}
         </button>
 
         <p className="text-center text-sm text-gray-600 mt-4">
-          Already have an account?{" "}
+          {t('login_link')}?
           <Link
             to="/login"
             className="text-blue-600 hover:underline font-medium"
           >
-            Sign in
+            {t('sign_in')}
           </Link>
         </p>
       </form>

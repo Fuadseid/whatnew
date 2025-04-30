@@ -1,0 +1,12 @@
+{
+    "title": "Connectez-vous à votre compte",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "login": "Connexion",
+    "remember": "Se souvenir de moi",
+    "forgot": "Mot de passe oublié ?",
+    "create": "Créer un nouveau compte",
+    "load": "Chargement...",
+    "emailplaceholder": "Votre e-mail",
+    "passwordPlaceholder": "Entrez votre mot de passe"
+  }

@@ -1,0 +1,30 @@
+{
+    "title": "Создать аккаунт",
+    "name": "Имя",
+    "username": "Имя пользователя",
+    "email": "Электронная почта",
+    "password": "Пароль",
+    "confirm_password": "Подтвердите пароль",
+    "user_type": "Роль",
+    "news_enthusiast": "Любитель новостей",
+    "content_creator": "Создатель контента",
+    "admin": "Администратор",
+    "name_placeholder": "Ваше полное имя",
+    "username_placeholder": "Выберите имя пользователя",
+    "email_placeholder": "ваш.email@example.com",
+    "password_placeholder": "Создать пароль",
+    "confirm_password_placeholder": "Подтвердите пароль",
+    "submit": "Зарегистрироваться",
+    "loading": "Обработка...",
+    "login_link": "Уже есть аккаунт?",
+    "sign_in": "Войти",
+    "errors": {
+      "name_required": "Имя обязательно",
+      "username_required": "Имя пользователя обязательно",
+      "email_required": "Электронная почта обязательна",
+      "email_invalid": "Электронная почта недействительна",
+      "password_required": "Пароль обязателен",
+      "password_length": "Пароль должен быть не менее 8 символов",
+      "password_mismatch": "Пароли не совпадают"
+    }
+  }

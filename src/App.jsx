@@ -10,40 +10,34 @@ import Showvideo from "./component/Showvideo";
 import Sidebar from "./component/Sidebar";
 import LogoutButton from "./component/LogoutButton";
 import ProtectedRoute from "./component/ProtectedRoute";
+import Language from "./component/Language";
+import Discovery from "./component/Discovery";
+import Following from "./component/Following";
+import Profile from "./component/Profile";
 
 function App() {
-  
   return (
     <div className="flex ">
-      {/*       <nav>
-        <li>
-          <Link to="/login">Login</Link>
-        </li>
-        <li>
-          <Link to="/register">Register</Link>
-        </li>
-        <li>
-          <Link to="/postvideo">Post</Link>
-        </li>
-        <li>
-          <Link to='/showvideo'>Show</Link>
-        </li>
-      </nav> */}
       <Sidebar />
-
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Registertion />} />
-        <Route path="/forget-password" element={<Forgetpass />} />
-        <Route path="/successreg" element={<SuccessfulReg />} />
-        <Route path="/reset-password" element={<Reset />} />
-        <Route element={<ProtectedRoute/>}>
-          <Route path="/postvideo" element={<Postvideo />} />
-          <Route path="/showvideo" element={<Showvideo />} />
-        </Route>
-        <Route path="/logout" element={<LogoutButton />} />
-      </Routes>
+      <div className="w-full">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Registertion />} />
+          <Route path="/forget-password" element={<Forgetpass />} />
+          <Route path="/successreg" element={<SuccessfulReg />} />
+          <Route path="/reset-password" element={<Reset />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/postvideo" element={<Postvideo />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/showvideo" element={<Showvideo />} />
+            <Route path="/language" element={<Language />} />
+            <Route path="/following" element={<Following />} />
+            <Route path="discover" element={<Discovery />} />
+          </Route>
+          <Route path="/logout" element={<LogoutButton />} />
+        </Routes>
+      </div>
     </div>
   );
 }

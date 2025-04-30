@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { showvideo, selectVideoState } from "../redux/slicer";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiHeart,
@@ -11,6 +11,14 @@ import {
   FiChevronUp,
   FiChevronDown,
 } from "react-icons/fi";
+import {
+  FaHeart,
+  FaRegHeart,
+  FaComment,
+  FaShare,
+  FaMusic,
+} from "react-icons/fa";
+import i18n from "../i18n/i18n";
 
 function Showvideo() {
   const dispatch = useDispatch();
@@ -18,32 +26,38 @@ function Showvideo() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const videoRefs = useRef([]);
   const containerRef = useRef();
-  const isAuthenticated = useSelector(state => state.auth.isAuthenticated??false);
-  
-  const navigate = useNavigate();
+  const isAuthenticated = useSelector(
+    (state) => state.auth.isAuthenticated ?? false
+  );
+  const [likedVideos, setLikedVideos] = useState({});
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState("");
 
+  const navigate = useNavigate();
+  useEffect(() => {
+    document.body.dir = i18n.dir(i18n.language);
+  }, [i18n, i18n.language]);
   const [isPlaying, setIsPlaying] = useState(() => {
     const initialStates = Array(data?.length || 0).fill(false);
-    initialStates[0] = true; 
+    initialStates[0] = true;
     return initialStates;
   });
-  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate("/login");
     } else {
-    dispatch(showvideo())
-      .unwrap()
-      .then((data) => {
-        console.log("Received data:", data);
-        const initialStates = Array(data.length).fill(false);
-        initialStates[0] = true;
-        setIsPlaying(initialStates);
-      })
-      .catch((err) => console.error("Error:", err));
+      dispatch(showvideo())
+        .unwrap()
+        .then((data) => {
+          console.log("Received data:", data);
+          const initialStates = Array(data.length).fill(false);
+          initialStates[0] = true;
+          setIsPlaying(initialStates);
+        })
+        .catch((err) => console.error("Error:", err));
     }
-  }, [dispatch,isAuthenticated, navigate]);
+  }, [dispatch, isAuthenticated, navigate]);
 
   // Handle scroll events
   useEffect(() => {
@@ -79,11 +93,6 @@ function Showvideo() {
           });
         }
       }
-
-      // Hide scroll indicator after first scroll
-      if (scrollPosition > 10) {
-        setShowScrollIndicator(false);
-      }
     };
 
     container.addEventListener("scroll", handleScroll);
@@ -111,6 +120,13 @@ function Showvideo() {
     }
   };
 
+  const toggleLike = (videoId) => {
+    setLikedVideos((prev) => ({
+      ...prev,
+      [videoId]: !prev[videoId],
+    }));
+  };
+
   const scrollToVideo = (direction) => {
     const container = containerRef.current;
     if (!container) return;
@@ -127,13 +143,20 @@ function Showvideo() {
     });
   };
 
+  const handleCommentSubmit = (e, videoId) => {
+    e.preventDefault();
+    // Add comment logic here
+    console.log(`Comment on video ${videoId}:`, commentText);
+    setCommentText("");
+  };
+
   if (loading)
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-t-transparent border-purple-500 rounded-full"
+          className="w-16 h-16 border-4 border-t-transparent border-purple-500 rounded-full"
         />
       </div>
     );
@@ -160,7 +183,7 @@ function Showvideo() {
     );
 
   return (
-    <div className="flex h-screen w-full bg-black">
+    <div className="flex h-screen w-full bg-black overflow-hidden">
       {/* Global styles for hiding scrollbar */}
       <style jsx global>{`
         .hide-scrollbar::-webkit-scrollbar {
@@ -178,35 +201,6 @@ function Showvideo() {
         className="flex-1 h-full overflow-y-scroll scroll-smooth relative hide-scrollbar"
         style={{ scrollSnapType: "y mandatory" }}
       >
-        {/* Scroll indicators (shown only initially) */}
-        {showScrollIndicator && (
-          <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-10 flex flex-col items-center gap-4">
-            <motion.div
-              animate={{ y: [-5, 5] }}
-              transition={{
-                repeat: Infinity,
-                repeatType: "reverse",
-                duration: 1.5,
-              }}
-              className="text-white/80"
-            >
-              <FiChevronUp size={24} />
-            </motion.div>
-            <span className="text-white/80 text-xs">Scroll</span>
-            <motion.div
-              animate={{ y: [5, -5] }}
-              transition={{
-                repeat: Infinity,
-                repeatType: "reverse",
-                duration: 1.5,
-              }}
-              className="text-white/80"
-            >
-              <FiChevronDown size={24} />
-            </motion.div>
-          </div>
-        )}
-
         <AnimatePresence>
           {data.map((video, index) => (
             <motion.div
@@ -218,59 +212,78 @@ function Showvideo() {
               className="relative w-full h-screen flex justify-center items-center"
               style={{ scrollSnapAlign: "start" }}
             >
+              {/* Video Background Blur */}
+              <motion.div
+                className="absolute inset-0 bg-black/30 backdrop-blur-lg"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              />
+
               {/* Video Player with perfect sizing */}
-              <div
-                className="relative w-full h-full flex justify-center items-center bg-black"
+              <motion.div
+                className="relative w-full h-full flex justify-center items-center"
                 onClick={() => togglePlayPause(index)}
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5 }}
               >
                 <video
                   ref={(el) => (videoRefs.current[index] = el)}
                   controls={false}
-                  muted
                   autoPlay={index === 0}
                   playsInline
                   loop
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                 >
                   <source src={video.video_url} type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
-              </div>
+              </motion.div>
 
               {/* Play/Pause overlay - only shown when paused */}
-
-              <div
-                className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer"
-                onClick={() => togglePlayPause(index)}
-              >
+              <AnimatePresence>
                 {!isPlaying[index] && (
-                  <div className="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-all">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
+                  <motion.div
+                    className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer"
+                    onClick={() => togglePlayPause(index)}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <motion.div
+                      className="w-20 h-20 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-all"
+                      whileHover={{ scale: 1.1 }}
                     >
-                      <path d="M6.3 2.8L17 10l-10.7 7.2V2.8z" />
-                    </svg>
-                  </div>
+                      <svg
+                        className="w-10 h-10 text-white"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M6.3 2.8L17 10l-10.7 7.2V2.8z" />
+                      </svg>
+                    </motion.div>
+                  </motion.div>
                 )}
-              </div>
+              </AnimatePresence>
 
               {/* Video Info Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6 pointer-events-none">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6 pointer-events-none">
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
                   className="mb-6 pointer-events-auto"
                 >
-                  <h3 className="text-xl font-bold text-white mb-2">
+                  <h3 className="text-2xl font-bold text-white mb-2">
                     {video.title}
                   </h3>
-                  <p className="text-gray-300 mb-4">{video.description}</p>
+                  <p className="text-gray-300 mb-4 text-lg">
+                    {video.description}
+                  </p>
                   <div className="flex items-center gap-4 text-sm text-gray-300">
-                    <span>Credibility: {video.credibility_score}%</span>
-                    <span>Duration: {video.duration_seconds}s</span>
+                    <span>🔥 {video.credibility_score}% Credible</span>
+                    <span>⏱️ {video.duration_seconds}s</span>
                   </div>
                 </motion.div>
 
@@ -278,83 +291,174 @@ function Showvideo() {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.7 }}
-                  className="flex items-center gap-3 pointer-events-auto"
+                  className="flex items-center gap-3 pointer-events-auto mb-8"
                 >
-                  <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
-                    <span className="text-white font-bold">
+                  <motion.div
+                    className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <span className="text-white font-bold text-xl">
                       {video.user?.name?.charAt(0) || "U"}
                     </span>
-                  </div>
+                  </motion.div>
                   <div>
-                    <p className="text-white font-medium">
+                    <p className="text-white font-medium text-lg">
                       @{video.user?.username || "creator"}
                     </p>
-                    <p className="text-gray-300 text-sm">Original Sound</p>
+                    <p className="text-gray-300 text-sm flex items-center gap-1">
+                      <FaMusic className="text-purple-400" /> Original Sound
+                    </p>
                   </div>
                 </motion.div>
               </div>
 
               {/* Action Buttons - Right Side */}
               <div
-                className="absolute right-4 bottom-1/4 flex flex-col items-center gap-6 z-20"
+                className={`absolute ${
+                  i18n.dir(i18n.language) === "rtl" ? "left-4" : "right-4"
+                } bottom-1/4 flex flex-col items-center gap-6 z-20`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <motion.button
-                  whileTap={{ scale: 1.2 }}
-                  className="flex flex-col items-center text-white"
+                <motion.div
+                  className="flex flex-col items-center"
+                  whileHover={{ scale: 1.05 }}
                 >
-                  <div className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all">
-                    <FiHeart size={24} />
-                  </div>
-                  <span className="text-xs mt-1">24.5K</span>
-                </motion.button>
-
-                <motion.button
-                  whileTap={{ scale: 1.2 }}
-                  className="flex flex-col items-center text-white"
-                >
-                  <div className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all">
-                    <FiMessageSquare size={24} />
-                  </div>
-                  <span className="text-xs mt-1">1.2K</span>
-                </motion.button>
-
-                <motion.button
-                  whileTap={{ scale: 1.2 }}
-                  className="flex flex-col items-center text-white"
-                >
-                  <div className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all">
-                    <FiShare2 size={24} />
-                  </div>
-                  <span className="text-xs mt-1">Share</span>
-                </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 1.2 }}
+                    className="flex flex-col items-center text-white"
+                    onClick={() => toggleLike(video.id)}
+                  >
+                    <div className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all">
+                      {likedVideos[video.id] ? (
+                        <FaHeart className="text-red-500 text-2xl" />
+                      ) : (
+                        <FaRegHeart className="text-white text-2xl" />
+                      )}
+                    </div>
+                    <span className="text-xs mt-1 font-medium">
+                      {likedVideos[video.id] ? "24.6K" : "24.5K"}
+                    </span>
+                  </motion.button>
+                </motion.div>
 
                 <motion.div
+                  className="flex flex-col items-center"
                   whileHover={{ scale: 1.05 }}
-                  className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center hover:bg-purple-600 transition-all"
+                >
+                  <motion.button
+                    whileTap={{ scale: 1.2 }}
+                    className="flex flex-col items-center text-white"
+                    onClick={() => setShowComments(!showComments)}
+                  >
+                    <div className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all">
+                      <FaComment className="text-white text-2xl" />
+                    </div>
+                    <span className="text-xs mt-1 font-medium">1.2K</span>
+                  </motion.button>
+                </motion.div>
+
+                <motion.div
+                  className="flex flex-col items-center"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <motion.button
+                    whileTap={{ scale: 1.2 }}
+                    className="flex flex-col items-center text-white"
+                  >
+                    <div className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all">
+                      <FaShare className="text-white text-2xl" />
+                    </div>
+                    <span className="text-xs mt-1 font-medium">Share</span>
+                  </motion.button>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center hover:shadow-lg transition-all"
                 >
                   <FiMusic size={20} className="text-white" />
                 </motion.div>
               </div>
+
+              {/* Comments Section */}
+              <AnimatePresence>
+                {showComments && (
+                  <motion.div
+                  className={`absolute ${i18n.dir(i18n.language) === 'rtl' ? 'left-20' : 'right-20'} bottom-20 w-80 h-96 bg-black/80 backdrop-blur-lg rounded-lg overflow-hidden flex flex-col z-30`}
+                  initial={{ x: 100, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: 100, opacity: 0 }}
+                    transition={{ type: "spring", damping: 25 }}
+                  >
+                    <div className="p-4 border-b border-gray-700">
+                      <h3 className="text-white font-bold">Comments (1.2K)</h3>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      {/* Sample comments */}
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-500 flex-shrink-0"></div>
+                        <div>
+                          <p className="text-white font-medium">@user123</p>
+                          <p className="text-gray-300 text-sm">
+                            This video is amazing! 🔥
+                          </p>
+                        </div>
+                      </div>
+                      {/* Add more comments */}
+                    </div>
+                    <form
+                      onSubmit={(e) => handleCommentSubmit(e, video.id)}
+                      className="p-4 border-t border-gray-700"
+                    >
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          placeholder="Add a comment..."
+                          className="flex-1 bg-gray-700 text-white rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                        <button
+                          type="submit"
+                          className="bg-purple-500 text-white rounded-full px-4 hover:bg-purple-600 transition"
+                        >
+                          Post
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
 
       {/* Right Sidebar with Scroll Controls */}
-      <div className="w-16 md:w-20 h-full flex flex-col items-center justify-between py-8 bg-black/30 border-l border-gray-800 z-10">
+      <div className="w-16 h-full flex flex-col items-center justify-between py-8 bg-transparent z-10">
         <motion.button
+          whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => scrollToVideo("up")}
-          className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all"
+          className="p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all shadow-lg"
         >
           <FiChevronUp size={24} />
         </motion.button>
 
+        <motion.div
+          className="text-white text-sm font-medium"
+          animate={{ y: [0, -5, 0] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+        >
+          {currentVideoIndex + 1}/{data.length}
+        </motion.div>
+
         <motion.button
+          whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => scrollToVideo("down")}
-          className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all"
+          className="p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all shadow-lg"
         >
           <FiChevronDown size={24} />
         </motion.button>

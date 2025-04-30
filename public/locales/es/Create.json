@@ -1,0 +1,30 @@
+{
+    "title": "Crear cuenta",
+    "name": "Nombre",
+    "username": "Nombre de usuario",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirm_password": "Confirmar contraseña",
+    "user_type": "Rol",
+    "news_enthusiast": "Entusiasta de noticias",
+    "content_creator": "Creador de contenido",
+    "admin": "Administrador",
+    "name_placeholder": "Tu nombre completo",
+    "username_placeholder": "Elige un nombre de usuario",
+    "email_placeholder": "tu.correo@ejemplo.com",
+    "password_placeholder": "Crear contraseña",
+    "confirm_password_placeholder": "Confirmar contraseña",
+    "submit": "Registrarse",
+    "loading": "Procesando...",
+    "login_link": "¿Ya tienes una cuenta?",
+    "sign_in": "Iniciar sesión",
+    "errors": {
+      "name_required": "El nombre es obligatorio",
+      "username_required": "El nombre de usuario es obligatorio",
+      "email_required": "El correo electrónico es obligatorio",
+      "email_invalid": "El correo electrónico no es válido",
+      "password_required": "La contraseña es obligatoria",
+      "password_length": "La contraseña debe tener al menos 8 caracteres",
+      "password_mismatch": "Las contraseñas no coinciden"
+    }
+  }

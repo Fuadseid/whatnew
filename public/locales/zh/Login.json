@@ -1,0 +1,12 @@
+{
+    "title": "登录您的账户",
+    "email": "电子邮件",
+    "password": "密码",
+    "login": "登录",
+    "remember": "记住我",
+    "forgot": "忘记密码？",
+    "create": "创建新账户",
+    "load": "加载中...",
+    "emailplaceholder": "您的电子邮件",
+    "passwordPlaceholder": "输入密码"
+  }

@@ -1,523 +1,334 @@
-import { useState, useCallback, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { postvideo, selectVideoState, resetAuthState } from "../redux/slicer";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-
-function PostVideo() {
+import React, { useState } from "react";
+import { FiUpload, FiImage, FiFilm, FiCheckCircle, FiXCircle, FiYoutube } from "react-icons/fi";
+import { useDispatch } from "react-redux";
+import { postvideo } from "../redux/slicer";
+import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
+function PostVideo({ onUploadComplete, label, validation, location }) {
+  const [file, setFile] = useState(null);
+  const [thumbnail, setThumbnail] = useState(null);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState('');
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
-  const { loading, error, success } = useSelector(selectVideoState);
-  const [isDragging, setIsDragging] = useState(false);
-  const [videoFile, setVideoFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState(null);
-  const [thumbnailUrlFile, setThumbnailUrlFile] = useState(null);
-  const [permissions, setPermissions] = useState({
-    allow_comments: true,
-    allow_shares: true,
-    allow_likes: true
-  });
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
+  const { loading } = useSelector((state) => state.auth.video);
+  const chunkSize = 1024 * 1024; // 1MB
+  const {t}= useTranslation('post');
+
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+    setProgress(0);
+    setError('');
+  };
+
+  const handleThumbnailChange = (event) => {
+    setThumbnail(event.target.files[0]);
+    setError('');
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
     }
-  }, [isAuthenticated, navigate]);
-  // Reset success/error states when component unmounts
-  useEffect(() => {
-    return () => {
-      if (success || error) {
-        dispatch(resetAuthState());
+  };
+
+  const uploadFile = async () => {
+    if (!file || !thumbnail || !title.trim() || !description.trim()) {
+      setError(t('errors.validation'));
+      return;
+    }
+
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    let uploadedChunks = 0;
+
+    setError('');
+
+    for (let start = 0; start < file.size; start += chunkSize) {
+      const chunk = file.slice(start, start + chunkSize);
+      const formData = new FormData();
+
+      formData.append("video_chunk", chunk);
+      formData.append("totalChunks", totalChunks);
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("location", location); 
+      formData.append("chunk", uploadedChunks);
+      if (uploadedChunks === 0) {
+        formData.append("thumbnail_url", thumbnail);
       }
-      // Clean up object URLs
-      if (preview) URL.revokeObjectURL(preview);
-      if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
-    };
-  }, [success, error, dispatch, preview, thumbnailUrl]);
-
-  const handleDragEnter = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDragOver = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      handleVideoFile(files[0]);
-    }
-  }, []);
-
-  const handleVideoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      handleVideoFile(file);
-    }
-  };
-
-  const handleVideoFile = (file) => {
-    if (!file.type.match("video.*")) {
-      alert("Please upload a video file (MP4, MOV, or AVI)");
-      return;
-    }
-    
-    if (file.size > 60 * 1024 * 1024) {
-      alert("File size exceeds 60MB limit");
-      return;
-    }
-
-    if (preview) URL.revokeObjectURL(preview);
-
-    setVideoFile(file);
-    setPreview(URL.createObjectURL(file));
-  };
-
-  const handleThumbnailChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!file.type.match("image.*")) {
-        alert("Please upload an image file (JPEG, PNG)");
-        return;
-      }
-
-      if (file.size > 2 * 1024 * 1024) {
-        alert("Thumbnail size exceeds 2MB limit");
-        return;
-      }
-
-      if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
-
-      setThumbnailUrlFile(file);
-      setThumbnailUrl(URL.createObjectURL(file));
-    }
-  };
-
-  const handlePermissionChange = (e) => {
-    const { name, checked } = e.target;
-    setPermissions(prev => ({
-      ...prev,
-      [name]: checked
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/');
-      return;
-    }
-
-    if (!videoFile) {
-      alert('Please select a video first');
-      return;
-    }
-
-    if (!thumbnailUrlFile) {
-      alert('Please select a thumbnail image');
-      return;
-    }
-  
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('video_url', videoFile);
-    formData.append('description', description);
-    formData.append('thumbnail_url', thumbnailUrlFile);
-    formData.append('allow_likes', permissions.allow_likes);
-    formData.append('allow_comments', permissions.allow_comments);
-    formData.append('allow_shares', permissions.allow_shares);
-  
-    try {
-      const resultAction = await dispatch(postvideo(formData));
       
-      if (postvideo.fulfilled.match(resultAction)) {
-        handleDiscard();
-        navigate('/videos');
+      try {
+        const response = await dispatch(postvideo(formData)).unwrap();
+
+        if (uploadedChunks === totalChunks - 1) {
+          if (response && response.data && response.data.file_path) {
+            if (onUploadComplete) {
+              onUploadComplete(response.data.file_path);
+            }
+          } else {
+            console.error('Unexpected response structure:', response);
+          }
+        } else {
+          console.log(`Uploaded chunk ${uploadedChunks + 1} of ${totalChunks}`);
+        }
+      
+        uploadedChunks++;
+        setProgress(Math.min((uploadedChunks / totalChunks) * 100, 100));
+
+      } catch (error) {
+        console.error("Error uploading chunk:", error);
+        setError("An error occurred during upload. Check console for details.");
+        break;
       }
-    } catch (err) {
-      console.error('Upload error:', err);
     }
-  };
-
-  const handleDiscard = () => {
-    if (preview) URL.revokeObjectURL(preview);
-    if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
-    
-    setPreview(null);
-    setVideoFile(null);
-    setTitle("");
-    setDescription("");
-    setThumbnailUrl(null);
-    setThumbnailUrlFile(null);
-    setPermissions({
-      allow_comments: true,
-      allow_shares: true,
-      allow_likes: true
-    });
-  };
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 100 }
-    }
-  };
-
-  const dropZoneVariants = {
-    initial: { scale: 1 },
-    dragging: { scale: 1.02, boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.2)" }
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="flex justify-center items-center min-h-[300px] p-4"
-    >
-      <motion.div 
-        className="w-full max-w-2xl bg-white rounded-xl shadow-md p-6"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 100 }}
+    <div className="max-w-2xl mx-auto p-6 bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-xl border border-gray-100">
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+          <FiYoutube className="w-8 h-8 text-blue-600" />
+        </div>
+        <h2 className="text-3xl font-bold text-gray-800 bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+          {label || t('header.title')}
+        </h2>
+        <p className="text-gray-600 mt-2 text-lg">
+         {t('header.subtitle')}
+        </p>
+      </div>
+
+      {/* Drag and Drop Area */}
+      <div 
+        className={`border-2 border-dashed rounded-xl p-8 text-center mb-6 transition-all ${isDragActive ? 'border-blue-500 bg-blue-50 scale-[1.01]' : 'border-gray-300 hover:border-blue-400'} transform transition-transform duration-200`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
-        <motion.form 
-          onSubmit={handleSubmit} 
-          className="space-y-6"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {/* Video Upload Section */}
-          <motion.div
-            variants={itemVariants}
-            animate={isDragging ? "dragging" : "initial"}
-            variants={dropZoneVariants}
-            className={`relative rounded-xl border-2 ${
-              isDragging
-                ? "border-blue-500 bg-blue-50"
-                : "border-dashed border-blue-300"
-            } transition-all duration-200 p-6`}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <AnimatePresence mode="wait">
-                {preview ? (
-                  <motion.div
-                    key="preview"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="w-full aspect-video rounded-lg overflow-hidden bg-black"
-                  >
-                    <video
-                      src={preview}
-                      controls
-                      className="w-full h-full object-contain"
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="upload-prompt"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex flex-col items-center space-y-4"
-                  >
-                    <motion.div 
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="p-4 bg-blue-100 rounded-full"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-10 w-10 text-blue-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                        />
-                      </svg>
-                    </motion.div>
-                    <motion.h3 
-                      className="text-lg font-medium text-gray-700"
-                      whileHover={{ scale: 1.01 }}
-                    >
-                      {isDragging
-                        ? "Drop your video here"
-                        : "Drag & drop your video here"}
-                    </motion.h3>
-                    <motion.p 
-                      className="text-sm text-gray-500"
-                      whileHover={{ scale: 1.01 }}
-                    >
-                      or
-                    </motion.p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <motion.label 
-                className="cursor-pointer"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
-                  Browse files
-                </span>
-                <input
-                  type="file"
-                  name="video"
-                  className="hidden"
-                  accept="video/mp4,video/quicktime,video/x-msvideo"
-                  onChange={handleVideoChange}
-                />
-              </motion.label>
-
-              <motion.p 
-                className="text-xs text-gray-500 text-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                Supported formats: MP4, MOV, AVI. Max size: 60MB
-              </motion.p>
+        <div className="flex flex-col items-center justify-center space-y-4">
+          <div className="relative">
+            <FiUpload className="w-12 h-12 text-blue-500" />
+            <div className={`absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs transform transition-transform ${isDragActive ? 'scale-125' : 'scale-100'}`}>
+              +
             </div>
-          </motion.div>
-
-          {/* Title Input */}
-          <motion.div variants={itemVariants} className="space-y-2">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-              Title*
-            </label>
-            <motion.input
-              type="text"
-              name="title"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter video title"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              required
-              maxLength={100}
-              whileFocus={{ scale: 1.01, boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" }}
-            />
-          </motion.div>
-
-          {/* Description Input */}
-          <motion.div variants={itemVariants} className="space-y-2">
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              Description*
-            </label>
-            <motion.textarea
-              name="description"
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your video"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 min-h-[100px]"
-              required
-              maxLength={500}
-              whileFocus={{ scale: 1.01, boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" }}
-            />
-          </motion.div>
-
-          {/* Thumbnail Upload */}
-          <motion.div variants={itemVariants} className="space-y-2">
-            <label htmlFor="thumbnail_url" className="block text-sm font-medium text-gray-700">
-              Thumbnail Image (Required)
-            </label>
-            <div className="flex items-center space-x-4">
-              <AnimatePresence>
-                {thumbnailUrl && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="w-20 h-20 rounded-md overflow-hidden border border-gray-200"
-                  >
-                    <img 
-                      src={thumbnailUrl} 
-                      alt="Thumbnail preview" 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = 'placeholder-image-url';
-                      }}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <motion.label 
-                className="cursor-pointer"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors duration-200">
-                  {thumbnailUrl ? "Change Thumbnail" : "Add Thumbnail"}
-                </span>
-                <input
-                  type="file"
-                  name="thumbnail_url"
-                  id="thumbnail_url"
-                  className="hidden"
-                  accept="image/jpeg,image/png"
-                  onChange={handleThumbnailChange}
-                  required
-                />
-              </motion.label>
-            </div>
-            <motion.p 
-              className="text-xs text-gray-500"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              Supported formats: JPG, JPEG, PNG. Max size: 2MB
-            </motion.p>
-          </motion.div>
-
-          {/* Permissions */}
-          <motion.div variants={itemVariants} className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Permissions</label>
-            <ul className="space-y-2">
-              {Object.entries(permissions).map(([key, value]) => (
-                <motion.li 
-                  key={key}
-                  className="flex items-center"
-                  whileHover={{ x: 5 }}
-                >
-                  <input
-                    type="checkbox"
-                    name={key}
-                    id={key}
-                    checked={value}
-                    onChange={handlePermissionChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor={key} className="ml-2 text-sm text-gray-700">
-                    Allow {key.split('_')[1]}
-                  </label>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Status Messages */}
-          <AnimatePresence>
-            {(error || success) && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-2"
-                key="status-message"
-              >
-                {error && (
-                  <motion.div 
-                    className="p-3 text-red-700 bg-red-50 rounded-md"
-                    initial={{ scale: 0.9 }}
-                    animate={{ scale: 1 }}
-                  >
-                    {error.message || "Failed to upload video. Please try again."}
-                  </motion.div>
-                )}
-                {success && (
-                  <motion.div 
-                    className="p-3 text-green-700 bg-green-50 rounded-md"
-                    initial={{ scale: 0.9 }}
-                    animate={{ scale: 1 }}
-                  >
-                    Video uploaded successfully!
-                  </motion.div>
-                )}
-              </motion.div>
+          </div>
+          <p className="text-gray-700 font-medium">
+            {file ? (
+              <span className="text-blue-600">{file.name}</span>
+            ) : (
+              t('upload.dragDrop')
             )}
-          </AnimatePresence>
-
-          {/* Action Buttons */}
-          <motion.div 
-            variants={itemVariants}
-            className="flex justify-end space-x-4 pt-4"
+          </p>
+          <p className="text-sm text-gray-500">{t('upload.requirements')}</p>
+          <label 
+            className={`px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all shadow-md hover:shadow-lg ${file ? 'hidden' : 'block'}`}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
           >
-            <motion.button
-              type="button"
-              onClick={handleDiscard}
-              disabled={loading}
-              className="px-6 py-2 text-gray-700 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Discard
-            </motion.button>
-            <motion.button
-              type="submit"
-              disabled={!preview || loading || !title || !description || !thumbnailUrl}
-              className={`px-6 py-2 rounded-md flex items-center justify-center ${
-                (!preview || loading || !title || !description || !thumbnailUrl) 
-                  ? 'bg-blue-400 cursor-not-allowed' 
-                  : 'bg-blue-600 hover:bg-blue-700'
-              } text-white transition-colors duration-200 min-w-[120px]`}
-              whileHover={{ 
-                scale: (!preview || loading || !title || !description || !thumbnailUrl) ? 1 : 1.05 
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {loading ? (
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="flex items-center"
-                >
-                  <svg className="mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Uploading...
-                </motion.span>
-              ) : 'Post Video'}
-            </motion.button>
-          </motion.div>
-        </motion.form>
-      </motion.div>
-    </motion.div>
+            <span className="relative z-10">{t('upload.selectFiles')}</span>
+            <span 
+              className={`absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-600 rounded-lg opacity-0 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+            ></span>
+            <input 
+              type="file" 
+              accept={validation} 
+              className="hidden" 
+              onChange={handleFileChange} 
+            />
+          </label>
+        </div>
+      </div>
+
+      {/* File Preview */}
+      {file && (
+        <div className="flex items-center justify-between bg-blue-50 p-4 rounded-lg mb-6 border border-blue-100 transform hover:scale-[1.005] transition-transform">
+          <div className="flex items-center space-x-4">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <FiFilm className="text-blue-600 text-xl" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-800">{file.name}</p>
+              <p className="text-sm text-gray-500">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setFile(null)} 
+            className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+          >
+            <FiXCircle className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
+      {/* Thumbnail Upload */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-3">{t('thumbnail.label')}</label>
+        <div className="flex items-center space-x-4">
+          {thumbnail ? (
+            <div className="group relative">
+              <img 
+                src={URL.createObjectURL(thumbnail)} 
+                alt="Thumbnail preview" 
+                className="w-20 h-20 object-cover rounded-lg border border-gray-200 group-hover:border-blue-300 transition-colors"
+              />
+              <button 
+                onClick={() => setThumbnail(null)} 
+                className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow-sm text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <FiXCircle className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors group">
+              <div className="p-2 bg-gray-100 rounded-full group-hover:bg-blue-50 transition-colors">
+                <FiImage className="text-gray-400 group-hover:text-blue-500 transition-colors" />
+              </div>
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleThumbnailChange} 
+              />
+            </label>
+          )}
+          <div className="text-sm text-gray-500">
+            {thumbnail ? (
+              <span>{t('thumbnail.change')}</span>
+            ) : (
+              <span>{t('thumbnail.placeholder')}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Title Input */}
+      <div className="mb-5">
+        <label className=" text-sm font-medium text-gray-700 mb-2 flex items-center">
+          <span>{t('form.title.label')}</span>
+          <span className="ml-1 text-xs text-gray-400">{t('form.required')}</span>
+        </label>
+        <input
+          type="text"
+          placeholder={t('form.title.placeholder')}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-gray-400"
+        />
+        <p className="mt-1 text-xs text-gray-500">{t('form.title.hint')}</p>
+      </div>
+
+      {/* Description Input */}
+      <div className="mb-7">
+        <label className=" text-sm font-medium text-gray-700 mb-2 flex items-center">
+          <span>{t('form.description.label')}</span>
+          <span className="ml-1 text-xs text-gray-400">{t('form.required')}</span>
+        </label>
+        <textarea
+          placeholder={t('form.description.placeholder')}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-gray-400"
+          rows="4"
+        />
+        <p className="mt-1 text-xs text-gray-500">{t('form.description.hint')}</p>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="flex items-center p-4 mb-5 text-sm text-red-700 bg-red-50 rounded-lg border border-red-100">
+          <FiXCircle className="mr-3 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Progress Bar */}
+      {progress > 0 && progress < 100 && (
+        <div className="mb-6 animate-pulse">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>{t('progress.uploading')}</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-blue-500 to-blue-400 h-2.5 rounded-full transition-all duration-300 ease-out" 
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          <p className="mt-2 text-xs text-gray-500">This may take a few moments. Please don't close this window.</p>
+        </div>
+      )}
+
+      {/* Upload Button */}
+      <button
+        className={`w-full py-3.5 px-4 flex items-center justify-center rounded-xl text-white font-medium transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${loading ? 'bg-blue-400 cursor-not-allowed from-blue-400 to-blue-400' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'}`}
+        onClick={uploadFile}
+        disabled={loading}
+      >
+        {loading ? (
+          <>
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {t('upload.uploading')}
+          </>
+        ) : (
+          <>
+            <FiUpload className="mr-2 w-5 h-5" />
+            <span className="text-lg">{t('upload.postButton')}</span>
+          </>
+        )}
+      </button>
+
+      {/* Success Message */}
+      {progress === 100 && (
+        <div className="mt-5 p-4 flex items-center text-sm text-green-700 bg-green-50 rounded-lg border border-green-100 animate-in fade-in">
+          <FiCheckCircle className="mr-3 flex-shrink-0 w-5 h-5" />
+          <div>
+            <p className="font-medium">{t('upload.success')}</p>
+            <p className="text-xs text-green-600 mt-1">{t('upload.processing')}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Tips Section */}
+      {!file && (
+        <div className="mt-8 pt-6 border-t border-gray-100">
+          <h3 className="text-sm font-medium text-gray-500 mb-3">{t('tips.title')}</h3>
+          <ul className="space-y-2 text-sm text-gray-600">
+            <li className="flex items-start">
+              <span className="mr-2 text-blue-500">•</span>
+              <span>{t('tips.items.quality')}</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2 text-blue-500">•</span>
+              <span>{t('tips.items.duration')}</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2 text-blue-500">•</span>
+              <span>{t('tips.items.description')}</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2 text-blue-500">•</span>
+              <span>{t('tips.items.thumbnail')}</span>
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 

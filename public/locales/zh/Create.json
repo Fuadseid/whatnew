@@ -1,0 +1,30 @@
+{
+    "title": "创建账户",
+    "name": "姓名",
+    "username": "用户名",
+    "email": "电子邮件",
+    "password": "密码",
+    "confirm_password": "确认密码",
+    "user_type": "角色",
+    "news_enthusiast": "新闻爱好者",
+    "content_creator": "内容创作者",
+    "admin": "管理员",
+    "name_placeholder": "您的全名",
+    "username_placeholder": "选择一个用户名",
+    "email_placeholder": "您的电子邮件",
+    "password_placeholder": "创建密码",
+    "confirm_password_placeholder": "确认密码",
+    "submit": "注册",
+    "loading": "处理中...",
+    "login_link": "已有账户？",
+    "sign_in": "登录",
+    "errors": {
+      "name_required": "姓名必填",
+      "username_required": "用户名必填",
+      "email_required": "电子邮件必填",
+      "email_invalid": "电子邮件无效",
+      "password_required": "密码必填",
+      "password_length": "密码至少8个字符",
+      "password_mismatch": "密码不匹配"
+    }
+  }

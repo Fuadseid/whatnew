@@ -1,0 +1,12 @@
+{
+    "title": "Login to your account",
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "remember": "Remember me",
+    "forgot": "Forgot password?",
+    "create": "Create new account",
+    "load": "Loading...",
+    "emailplaceholder": "Your email",
+    "passwordPlaceholder": "Enter your password"
+  }

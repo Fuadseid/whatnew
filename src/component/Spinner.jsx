@@ -1,0 +1,1 @@
+<ScaleLoader color="#a855f7" />

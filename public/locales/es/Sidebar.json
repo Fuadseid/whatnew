@@ -1,0 +1,18 @@
+{
+    "appName": "Qué hay de nuevo",
+    "navItems": {
+      "forYou": "Para ti",
+      "following": "Siguiendo",
+      "discover": "Descubrir",
+      "upload": "Subir",
+      "language": "Idioma",
+      "profile": "Perfil",
+      "logout": "Cerrar sesión"
+    },
+    "newBadge": "Nuevo",
+    "expandTooltip": "Haz clic para expandir",
+    "user": {
+      "username": "Nombre de usuario",
+      "handle": "@usuario"
+    }
+  }

@@ -1,0 +1,18 @@
+{
+    "appName": "Что нового",
+    "navItems": {
+      "forYou": "Для вас",
+      "following": "Подписки",
+      "discover": "Открытия",
+      "upload": "Загрузить",
+      "language": "Язык",
+      "profile": "Профиль",
+      "logout": "Выйти"
+    },
+    "newBadge": "Новое",
+    "expandTooltip": "Нажмите, чтобы развернуть",
+    "user": {
+      "username": "Имя пользователя",
+      "handle": "@пользователь"
+    }
+  }

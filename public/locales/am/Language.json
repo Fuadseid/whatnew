@@ -1,0 +1,11 @@
+{
+  "title": "ቋንቋ ይምረጡ",
+  "subtitle": "ለተሻለ ተሞክሮ የሚመርጡትን ቋንቋ ይምረጡ",
+  "languageCount": "{{count}} ቋንቋዎች",
+  "searchPlaceholder": "ቋንቋዎችን ይፈልጉ...",
+  "noResults": "\"{searchTerm}\" የሚመሳሰል ቋንቋ አልተገኘም",
+  "confirmButton": "ምርጫ ያረጋግጡ",
+  "didYouKnow": "ገብተዋል?",
+  "translationCoverage": "የእኛ መድረክ {{count}} ቋንቋዎችን ይደግፋል፣ ይህም 95% የዓለም ተጠቃሚዎችን ይሸፍናል።",
+  "helpTranslate": "ተጨማሪ ቋንቋዎችን ለመተርጎም ይርዱን"
+}

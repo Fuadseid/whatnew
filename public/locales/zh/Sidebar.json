@@ -1,0 +1,18 @@
+{
+    "appName": "最新动态",
+    "navItems": {
+      "forYou": "推荐",
+      "following": "关注",
+      "discover": "发现",
+      "upload": "上传",
+      "language": "语言",
+      "profile": "个人资料",
+      "logout": "退出"
+    },
+    "newBadge": "新",
+    "expandTooltip": "点击展开",
+    "user": {
+      "username": "用户名",
+      "handle": "@用户名"
+    }
+  }

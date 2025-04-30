@@ -1,0 +1,51 @@
+{
+    "header": {
+      "title": "Partagez Votre Histoire",
+      "subtitle": "Votre public vous attend! Téléchargez une vidéo et connectez-vous avec eux."
+    },
+    "upload": {
+      "dragDrop": "Glissez-déposez votre vidéo ici",
+      "selectFiles": "Sélectionner des Fichiers",
+      "requirements": "MP4, WebM ou MOV. Max 100MB.",
+      "uploading": "Téléchargement en cours...",
+      "success": "Téléchargement terminé avec succès!",
+      "processing": "Votre vidéo est en cours de traitement et sera bientôt disponible.",
+      "postButton": "Publier la Vidéo"
+    },
+    "thumbnail": {
+      "label": "Miniature de la Vidéo",
+      "placeholder": "Téléchargez une miniature qui représente votre vidéo",
+      "change": "Cliquez sur l'image pour la changer"
+    },
+    "form": {
+      "title": {
+        "label": "Titre de la Vidéo",
+        "placeholder": "De quoi parle votre vidéo?",
+        "hint": "Rendez-le accrocheur et descriptif"
+      },
+      "description": {
+        "label": "Description",
+        "placeholder": "Dites aux spectateurs de quoi parle votre vidéo...",
+        "hint": "Cela aide les gens à découvrir votre contenu"
+      },
+      "required": "(Requis)"
+    },
+    "errors": {
+      "validation": "Veuillez remplir tous les champs et sélectionner à la fois une vidéo et une miniature.",
+      "upload": "Une erreur s'est produite lors du téléchargement. Vérifiez la console pour plus de détails."
+    },
+    "progress": {
+      "uploading": "Téléchargement de votre vidéo...",
+      "percentage": "{{progress}}%",
+      "hint": "Cela peut prendre quelques instants. Veuillez ne pas fermer cette fenêtre."
+    },
+    "tips": {
+      "title": "CONSEILS VIDÉO",
+      "items": {
+           "quality": "Utilisez une vidéo de haute qualité (720p ou plus)",
+          "duration": "Gardez les vidéos sous 5 minutes pour un meilleur engagement",
+       "description": "Ajoutez un titre descriptif et une description détaillée",
+         "thumbnail": "Choisissez une miniature accrocheuse"
+      }
+    }
+  }
