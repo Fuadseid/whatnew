@@ -63,29 +63,44 @@ export const showvideo = createAsyncThunk(
 
 export const postvideo = createAsyncThunk(
   "video/post",
-  async (formData,{rejectWithValue,getState }) => {
-    const {auth} = getState();
-    if(!auth.isAuthenticated||!auth.token){
-return rejectWithValue({message:"Not authenticated"});  }
-try{
-    formData.forEach((value, key) => {
-        console.log(key, value);
-      });   
-       const response =  await api.post("/post-video", formData,{
-    headers:{
-      Authorization: `Bearer ${auth.token}`,
-      'Content-Type': 'multipart/form-data',
-
+  async (formData, { rejectWithValue, getState }) => {
+    const { auth } = getState();
+    if (!auth.isAuthenticated || !auth.token) {
+      return rejectWithValue({ message: "Not authenticated" });
     }
-   } );
-   return response.data;
-}catch(error){
-  return rejectWithValue(
-   {
-message:`Error Uploading the video ${error}`,
+    try {
+      formData.forEach((value, key) => {
+        console.log(key, value);
+      });
+      const response = await api.post("/post-video", formData, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({
+        message: `Error Uploading the video ${error}`,
+      });
+    }
   }
-  )
-}
+);
+export const googleLogin = createAsyncThunk(
+  "auth/googleLogin",
+  async (__, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/google/redirect");
+      const { user, token } = response.data;
+      setAuthToken(token);
+      return { user, token };
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data || {
+          message: "Google login failed. Please try again.",
+        }
+      );
+    }
   }
 );
 
@@ -201,6 +216,11 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    setToken:(state, action) => {
+      state.token = action.payload;
+      state.isAuthenticated = true;
+    },
+
     resetAuthState: (state) => {
       state.error = null;
       state.success = false;
@@ -214,7 +234,6 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       setAuthToken(null);
     },
-    
   },
   extraReducers: (builder) => {
     builder
@@ -235,6 +254,16 @@ const authSlice = createSlice({
         state.error = action.payload;
         state.isAuthenticated = false;
       })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
+        state.error = action.payload;
+        state.isAuthenticated = false;
+      })
+      
 
       // Register
       .addCase(postRegister.pending, (state) => {
@@ -324,7 +353,7 @@ const authSlice = createSlice({
 });
 
 // Exports
-export const { resetAuthState, logout, setUploadProgress } = authSlice.actions;
+export const { resetAuthState,setToken, logout, setUploadProgress } = authSlice.actions;
 
 // Selectors
 export const selectVideoState = (state) => state.auth.video;
