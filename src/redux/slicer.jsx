@@ -43,8 +43,13 @@ export const showvideo = createAsyncThunk(
     if (!auth.isAuthenticated || !auth.token) {
       return rejectWithValue({ message: "Not authenticated" });
     }
+
+        // Return cached data if available and not stale
+    if (auth.video && auth.video.data && !auth.video.invalidated) {
+      return auth.video.data;
+    }
     try {
-      const response = await api.get("/showvideo", {
+      const response = await api.get("/show", {
         headers: {
           Authorization: `Bearer ${auth.token}`,
         },
@@ -62,7 +67,7 @@ export const showvideo = createAsyncThunk(
 );
 
 export const postvideo = createAsyncThunk(
-  "video/post",
+  "upload",
   async (formData, { rejectWithValue, getState }) => {
     const { auth } = getState();
     if (!auth.isAuthenticated || !auth.token) {
@@ -72,7 +77,7 @@ export const postvideo = createAsyncThunk(
       formData.forEach((value, key) => {
         console.log(key, value);
       });
-      const response = await api.post("/post-video", formData, {
+      const response = await api.post("/upload", formData, {
         headers: {
           Authorization: `Bearer ${auth.token}`,
           "Content-Type": "multipart/form-data",
@@ -86,23 +91,7 @@ export const postvideo = createAsyncThunk(
     }
   }
 );
-export const googleLogin = createAsyncThunk(
-  "auth/googleLogin",
-  async (__, { rejectWithValue }) => {
-    try {
-      const response = await api.get("/google/redirect");
-      const { user, token } = response.data;
-      setAuthToken(token);
-      return { user, token };
-    } catch (error) {
-      return rejectWithValue(
-        error?.response?.data || {
-          message: "Google login failed. Please try again.",
-        }
-      );
-    }
-  }
-);
+
 
 export const resetPassword = createAsyncThunk(
   "auth/resetPassword",
@@ -124,6 +113,25 @@ export const resetPassword = createAsyncThunk(
           message: "Password reset failed. Please try again.",
         }
       );
+    }
+  }
+);
+
+// Google Authentication
+export const googleLogin = createAsyncThunk(
+  "auth/googleLogin",
+  async (_, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await api.get("/auth/google/callback");
+      const { token, user } = response.data;
+      
+      // Set token immediately
+      setAuthToken(token);
+      dispatch(setToken(token));
+      
+      return { token, user };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
@@ -181,14 +189,143 @@ export const checkAuth = createAsyncThunk(
   }
 );
 
+
+
+
+export const fetchProfile = createAsyncThunk(
+  "auth/fetchProfile",
+  async (userId, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const response = await api.get(`/profile/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
+      
+      return {
+        user: response.data.user, // Now includes is_following
+        videos: response.data.videos,
+        likes: response.data.likes
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || {
+        message: "Failed to fetch profile",
+        status: error.response?.status,
+      });
+    }
+  }
+);
+
+
+
+// Add this to your slicer
+export const fetchUserVideos = createAsyncThunk(
+  "video/userVideos",
+  async (userId, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const response = await api.get(`/user/${userId}/videos`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: "Failed to fetch user videos" });
+    }
+  }
+);
+
+
+// Follow a user
+export const followUser = createAsyncThunk(
+  "user/follow",
+  async (userId, { rejectWithValue, getState, dispatch }) => {
+    try {
+      const { auth } = getState();
+      const response = await api.post(`/follow/${userId}`, {}, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
+      
+      // Update current user's following count
+      dispatch(authSlice.actions.updateCurrentUser({
+        following_count: response.data.following_count
+      }));
+      
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to follow user" }
+      );
+    }
+  }
+);
+
+// Unfollow a user
+export const unfollowUser = createAsyncThunk(
+  "user/unfollow",
+  async (userId, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const response = await api.post(`/unfollow/${userId}`, {}, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to unfollow user" }
+      );
+    }
+  }
+);
+
+
+export const fetchFollowingVideos = createAsyncThunk(
+  "video/following",
+  async (_, { rejectWithValue, getState }) => { // Remove userId parameter
+    try {
+      const { auth } = getState();
+      
+      // Check if user is authenticated and has an ID
+      if (!auth.isAuthenticated || !auth.user?.id) {
+        throw new Error("User not authenticated");
+      }
+
+      const response = await api.get(`/feed/following/${auth.user.id}`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || {
+          message: "Failed to fetch following videos",
+          status: error.response?.status,
+        }
+      );
+    }
+  }
+);
+
+
+
+
+
+
 // Initial State
-const initialState = {
+const initialState = { 
   user: null,
-  token: null,
+  token: localStorage.getItem("token"), 
   isLoading: false,
   error: null,
   success: false,
-  isAuthenticated: false,
+  isAuthenticated:  !!localStorage.getItem("token"),
   forgetPassword: {
     loading: false,
     error: null,
@@ -208,8 +345,24 @@ const initialState = {
     data: null,
     uploadProgress: 0,
     status: null,
+    lastFetched: null,  // Track when data was last fetched
+    invalidated: true   // Force refresh when needed
   },
+
+  profile: {
+    user: null,
+    videos: [],
+    likes: 0,
+    loading: false,
+    error: null,
+    followError: null 
+  
+},
 };
+
+
+
+
 
 // Slice
 const authSlice = createSlice({
@@ -219,6 +372,9 @@ const authSlice = createSlice({
     setToken:(state, action) => {
       state.token = action.payload;
       state.isAuthenticated = true;
+
+  api.defaults.headers.common['Authorization'] = `Bearer ${action.payload}`;
+  localStorage.setItem('token', action.payload);
     },
 
     resetAuthState: (state) => {
@@ -228,12 +384,81 @@ const authSlice = createSlice({
       state.resetPassword = initialState.resetPassword;
       state.video = { ...initialState.video, data: state.video.data };
     },
+      clearProfile: (state) => {
+      state.profile = initialState.profile;
+    },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
       setAuthToken(null);
     },
+    updateProfileUser: (state, action) => {
+      if (state.profile.user) {
+        state.profile.user = {
+          ...state.profile.user,
+          ...action.payload
+        };
+      }
+    },
+    updateCurrentUser: (state, action) => {
+  if (state.user) {
+    state.user = {
+      ...state.user,
+      ...action.payload
+    };
+  }
+},
+updateVideoWithComment: (state, action) => {
+      const { videoId, comment } = action.payload;
+      if (state.video.data) {
+        state.video.data = state.video.data.map(video => {
+          if (video.id === videoId) {
+            return {
+              ...video,
+              comments: [
+                {
+                  ...comment,
+                  user: comment.user || {
+                    id: state.user?.id,
+                    name: state.user?.name,
+                    username: state.user?.username,
+                    profile_picture: state.user?.profile_picture
+                  }
+                },
+                ...(video.comments || [])
+              ]
+            };
+          }
+          return video;
+        });
+      }
+    },
+// In your authSlice.js
+updateVideoLikes: (state, action) => {
+  const { videoId, likeCount, isLiked, userId } = action.payload;
+  if (state.video.data) {
+    state.video.data = state.video.data.map(video => {
+      if (video.id === videoId) {
+        const updatedVideo = {
+          ...video,
+          like_count: likeCount,
+          is_liked: isLiked, // Ensure this is set
+        };
+        
+        // Update likes array if it exists
+        if (Array.isArray(video.likes)) {
+          updatedVideo.likes = isLiked
+            ? [...video.likes, { user_id: userId }]
+            : video.likes.filter(like => like.user_id !== userId);
+        }
+        
+        return updatedVideo;
+      }
+      return video;
+    });
+  }
+},
   },
   extraReducers: (builder) => {
     builder
@@ -254,15 +479,36 @@ const authSlice = createSlice({
         state.error = action.payload;
         state.isAuthenticated = false;
       })
-      .addCase(googleLogin.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
-      })
-      .addCase(googleLogin.rejected, (state, action) => {
-        state.error = action.payload;
-        state.isAuthenticated = false;
-      })
+
+
+
+      .addCase(googleLogin.pending, (state) => {
+  state.isLoading = true;
+  state.error = null;
+})
+.addCase(googleLogin.fulfilled, (state, action) => {
+  const googleUser = action.payload.user;
+  
+  state.isLoading = false;
+  state.user = {
+    id: googleUser.id || googleUser._id || googleUser.userId, // try common id fields
+    name: googleUser.name,
+    email: googleUser.email,
+    username: googleUser.username || googleUser.email.split('@')[0],
+    profile_picture: googleUser.profile_picture || googleUser.avatar,
+    // Default values for other fields
+  };
+  state.token = action.payload.token;
+  state.isAuthenticated = true;
+  state.success = true;
+  setAuthToken(action.payload.token);
+})
+.addCase(googleLogin.rejected, (state, action) => {
+  state.isLoading = false;
+  state.error = action.payload;
+  state.isAuthenticated = false;
+})
+
       
 
       // Register
@@ -282,11 +528,14 @@ const authSlice = createSlice({
       // Check Auth
       .addCase(checkAuth.pending, (state) => {
         state.isLoading = true;
+        state.isAuthenticated = false; // Reset while checking
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
+        state.token = localStorage.getItem("token"); // Ensure token is set
+
       })
       .addCase(checkAuth.rejected, (state, action) => {
         state.isLoading = false;
@@ -331,6 +580,8 @@ const authSlice = createSlice({
         state.video.loading = false;
         state.video.success = true;
         state.video.data = action.payload;
+        state.lastFetched = Date.now();
+        state.invalidated = false;
       })
       .addCase(showvideo.rejected, (state, action) => {
         state.video.loading = false;
@@ -348,12 +599,104 @@ const authSlice = createSlice({
       .addCase(postvideo.rejected, (state, action) => {
         state.video.loading = false;
         state.video.error = action.payload;
-      });
-  },
+      })
+
+      //profile
+      .addCase(fetchProfile.pending, (state) => {
+        state.profile.loading = true;
+        state.profile.error = null;
+      })
+      // In your Redux slice (authSlice.js or similar)
+.addCase(fetchProfile.fulfilled, (state, action) => {
+  state.profile.loading = false;
+  state.profile.user = action.payload.user; // Store exactly what came from API
+  state.profile.videos = action.payload.videos;
+  state.profile.likes = action.payload.likes;
+})
+      .addCase(fetchProfile.rejected, (state, action) => {
+        state.profile.loading = false;
+        state.profile.error = action.payload?.message || action.error.message;
+      })
+
+      // Follow User
+.addCase(followUser.pending, (state) => {
+  state.profile.loading = true;
+})
+// In your authSlice.js - extraReducers section
+
+// Update the follow/unfollow cases
+  .addCase(followUser.fulfilled, (state, action) => {
+      state.profile.loading = false;
+      // Update profile user's followers count
+      if (state.profile.user) {
+          state.profile.user.followers_count = action.payload.followers_count;
+          state.profile.user.is_following = true; // Update following status
+      }
+      // Update current user's following count
+      if (state.user) {
+          state.user.following_count = action.payload.following_count;
+      }
+  })
+// Update the extraReducers for follow/unfollow
+.addCase(followUser.rejected, (state, action) => {
+  state.profile.loading = false;
+  state.profile.followError = action.payload?.message || "Failed to follow user";
+  // If it's a conflict, update the state to reflect the existing relationship
+  if (action.payload?.message?.includes('Already following')) {
+    if (state.profile.user) {
+      state.profile.user.followers_count += 1;
+    }
+    if (state.user && state.profile.user) {
+      state.user.following = [...(state.user.following || []), {
+        id: state.profile.user.id,
+        name: state.profile.user.name,
+        username: state.profile.user.username
+      }];
+      state.user.following_count = (state.user.following_count || 0) + 1;
+    }
+  }
+})
+
+// Unfollow User
+.addCase(unfollowUser.pending, (state) => {
+  state.profile.loading = true;
+})
+.addCase(unfollowUser.fulfilled, (state, action) => {
+    state.profile.loading = false;
+    // Update profile user's followers count
+    if (state.profile.user) {
+        state.profile.user.followers_count = action.payload.followers_count;
+        state.profile.user.is_following = false; // Update following status
+    }
+    // Update current user's following count
+    if (state.user) {
+        state.user.following_count = action.payload.following_count;
+    }
+})
+
+.addCase(fetchFollowingVideos.pending, (state) => {
+  state.video.loading = true;
+  state.video.error = null;
+})
+.addCase(fetchFollowingVideos.fulfilled, (state, action) => {
+  state.video.loading = false;
+  state.video.data = action.payload; // Store the videos
+  state.video.error = null;
+})
+.addCase(fetchFollowingVideos.rejected, (state, action) => {
+  state.video.loading = false;
+  state.video.error = action.payload;
+})
+
+.addCase(unfollowUser.rejected, (state, action) => {
+  state.profile.loading = false;
+  state.profile.followError = action.payload?.message || "Failed to unfollow user";
+});
+  }
 });
 
 // Exports
-export const { resetAuthState,setToken, logout, setUploadProgress } = authSlice.actions;
+export const { resetAuthState,setToken, logout, setUploadProgress, clearProfile,  updateProfileUser, updateCurrentUser  } = authSlice.actions;
 
 // Selectors
 export const selectVideoState = (state) => state.auth.video;
@@ -364,5 +707,7 @@ export const selectAuthError = (state) => state.auth.error;
 export const selectAuthSuccess = (state) => state.auth.success;
 export const selectForgetPasswordState = (state) => state.auth.forgetPassword;
 export const selectResetPasswordState = (state) => state.auth.resetPassword;
+export const selectProfileState = (state) => state.auth.profile;
+
 
 export default authSlice.reducer;

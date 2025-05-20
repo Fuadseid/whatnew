@@ -14,10 +14,12 @@ import Language from "./component/Language";
 import Discovery from "./component/Discovery";
 import Following from "./component/Following";
 import Profile from "./component/Profile";
-
+import PubProfile from "./component/PubProfile";
+import AuthCallback from "./component/AuthCallback";
 function App() {
   
   return (
+    
     <div className="flex ">
       <Sidebar />
       <div className="w-full">
@@ -25,16 +27,19 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Registertion />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/forget-password" element={<Forgetpass />} />
           <Route path="/successreg" element={<SuccessfulReg />} />
           <Route path="/reset-password" element={<Reset />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/postvideo" element={<Postvideo />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/upload" element={<Postvideo />} />
+            <Route path="/profile/:id" element={<Profile />} />
             <Route path="/showvideo" element={<Showvideo />} />
             <Route path="/language" element={<Language />} />
             <Route path="/following" element={<Following />} />
+            {/* <Route path="/foryou" element={<ForYouPage />} /> */}
             <Route path="discover" element={<Discovery />} />
+            <Route path="/pubprofile/:id" element={<PubProfile />} />
           </Route>
           <Route path="/logout" element={<LogoutButton />} />
         </Routes>
