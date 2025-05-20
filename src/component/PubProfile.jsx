@@ -17,15 +17,21 @@ import {
   FaMusic, 
   FaUserPlus, 
   FaPlay,
-  FaCheck 
+  FaCheck,
+  FaTimes
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const PubProfile = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
+  const [modalTitle, setModalTitle] = useState('');
+  const [isLoadingModal, setIsLoadingModal] = useState(false);
   
   const {
     user: profileUser,
@@ -39,7 +45,6 @@ const PubProfile = () => {
   const currentUser = useSelector((state) => state.auth.user);
   const isCurrentUser = currentUser && currentUser.id === parseInt(id);
 
-  // Get following status from profile data (comes from backend)
   const isFollowing = profileUser?.is_following || false;
 
   useEffect(() => {
@@ -57,13 +62,11 @@ const PubProfile = () => {
     try {
       if (isFollowing) {
         const result = await dispatch(unfollowUser(profileUser.id)).unwrap();
-        // Update profile user
         dispatch(updateProfileUser({
           ...profileUser,
           followers_count: result.followers_count,
           is_following: false
         }));
-        // Update current user's following list
         if (currentUser.following) {
           dispatch(updateCurrentUser({
             following: currentUser.following.filter(user => user.id !== profileUser.id),
@@ -72,13 +75,11 @@ const PubProfile = () => {
         }
       } else {
         const result = await dispatch(followUser(profileUser.id)).unwrap();
-        // Update profile user
         dispatch(updateProfileUser({
           ...profileUser,
           followers_count: result.followers_count,
           is_following: true
         }));
-        // Update current user's following list
         dispatch(updateCurrentUser({
           following: [...(currentUser.following || []), {
             id: profileUser.id,
@@ -95,6 +96,79 @@ const PubProfile = () => {
     } finally {
       setIsFollowLoading(false);
     }
+  };
+
+  const fetchModalData = async (type) => {
+    setIsLoadingModal(true);
+    try {
+      const token = localStorage.getItem('token');
+      let response;
+      
+      switch(type) {
+        case 'followers':
+          response = await axios.get(`http://localhost:8000/api/profile/followers/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setModalTitle('Followers');
+          setModalContent(response.data);
+          break;
+        case 'following':
+          response = await axios.get(`http://localhost:8000/api/profile/following/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setModalTitle('Following');
+          setModalContent(response.data);
+          break;
+        default:
+          break;
+      }
+      
+      setShowModal(true);
+    } catch (error) {
+      console.error('Error fetching modal data:', error);
+      toast.error('Failed to load data');
+    } finally {
+      setIsLoadingModal(false);
+    }
+  };
+
+  const renderModalContent = () => {
+    if (isLoadingModal) {
+      return (
+        <div className="flex items-center justify-center p-8">
+          <div className="w-8 h-8 border-4 border-purple-500 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+      );
+    }
+
+    if (!modalContent || (Array.isArray(modalContent) && modalContent.length === 0)) {
+      return <div className="p-4 text-center text-gray-400">No data available</div>;
+    }
+
+    return (
+      <div className="overflow-y-auto max-h-96">
+        {modalContent.map(user => (
+          <div 
+            key={user.id} 
+            className="flex items-center p-4 border-b border-gray-700 cursor-pointer hover:bg-gray-800"
+            onClick={() => {
+              navigate(`/profile/${user.id}`);
+              setShowModal(false);
+            }}
+          >
+            <img 
+              src={user.profile_picture || '/default-avatar.png'} 
+              alt={user.name}
+              className="w-10 h-10 mr-3 rounded-full"
+            />
+            <div>
+              <p className="font-medium">{user.name}</p>
+              <p className="text-sm text-gray-400">@{user.username}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (loading) return (
@@ -134,6 +208,24 @@ const PubProfile = () => {
 
   return (
     <div className="min-h-screen text-white bg-gray-900">
+      {/* User Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="text-xl font-bold">{modalTitle}</h3>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="p-2 text-gray-400 hover:text-white"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            {renderModalContent()}
+          </div>
+        </div>
+      )}
+
       {/* Enhanced Cover Section */}
       <div className="relative">
         <div className="h-48 bg-gradient-to-r from-purple-900 via-pink-700 to-indigo-800"></div>
@@ -201,10 +293,28 @@ const PubProfile = () => {
               
               {/* Stats */}
               <div className="flex justify-center gap-8 mt-6 md:justify-start">
-                <StatBox value={videos.length} label="Videos" />
-                <StatBox value={likes} label="Likes" />
-                <StatBox value={profileUser.followers_count || 0} label="Followers" />
-                <StatBox value={profileUser.following_count || 0} label="Following" />
+                <StatBox 
+                  value={videos.length} 
+                  label="Videos" 
+                  clickable={false}
+                />
+                <StatBox 
+                  value={likes} 
+                  label="Likes" 
+                  clickable={false}
+                />
+                <StatBox 
+                  value={profileUser.followers_count || 0} 
+                  label="Followers" 
+                  clickable={true}
+                  onClick={() => fetchModalData('followers')}
+                />
+                <StatBox 
+                  value={profileUser.following_count || 0} 
+                  label="Following" 
+                  clickable={true}
+                  onClick={() => fetchModalData('following')}
+                />
               </div>
               
               {/* Bio */}
@@ -264,15 +374,18 @@ const PubProfile = () => {
   );
 };
 
-// Reusable Stat Component
-const StatBox = ({ value, label }) => (
-  <div className="text-center">
+// Updated StatBox component with clickable prop
+const StatBox = ({ value, label, clickable = false, onClick }) => (
+  <div 
+    className={`text-center ${clickable ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+    onClick={clickable ? onClick : undefined}
+  >
     <p className="text-2xl font-bold text-pink-400">{value}</p>
     <p className="text-sm text-gray-400">{label}</p>
   </div>
 );
 
-// Reusable Video Card Component
+// Video Card Component
 const VideoCard = ({ video, onClick }) => (
   <div 
     onClick={onClick}

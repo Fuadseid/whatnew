@@ -38,7 +38,7 @@ function App() {
             <Route path="/language" element={<Language />} />
             <Route path="/following" element={<Following />} />
             {/* <Route path="/foryou" element={<ForYouPage />} /> */}
-            <Route path="discover" element={<Discovery />} />
+            <Route path="/discover" element={<Discovery />} />
             <Route path="/pubprofile/:id" element={<PubProfile />} />
           </Route>
           <Route path="/logout" element={<LogoutButton />} />

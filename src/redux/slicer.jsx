@@ -66,6 +66,40 @@ export const showvideo = createAsyncThunk(
   }
 );
 
+
+
+export const showDiscoveryvideo = createAsyncThunk(
+  "video/discover",
+  async (_, { rejectWithValue, getState }) => {
+    const { auth } = getState();
+    if (!auth.isAuthenticated || !auth.token) {
+      return rejectWithValue({ message: "Not authenticated" });
+    }
+
+        // Return cached data if available and not stale
+    if (auth.video && auth.video.data && !auth.video.invalidated) {
+      return auth.video.data;
+    }
+    try {
+      const response = await api.get(`/feed/discover/${auth.user.id}`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || {
+          message: "Failed to fetch videos",
+          status: error.response?.status,
+        }
+      );
+    }
+  }
+);
+
+
+
 export const postvideo = createAsyncThunk(
   "upload",
   async (formData, { rejectWithValue, getState }) => {
@@ -312,6 +346,32 @@ export const fetchFollowingVideos = createAsyncThunk(
     }
   }
 );
+
+
+// Add this to your existing async thunks
+export const updateProfile = createAsyncThunk(
+  "auth/updateProfile",
+  async ({ userId, profileData }, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const response = await api.post(`/edit/${userId}`, profileData, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      });
+      return response.data.user;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || {
+          message: "Failed to update profile",
+          status: error.response?.status,
+        }
+      );
+    }
+  }
+);
+
+
 
 
 
@@ -674,6 +734,11 @@ updateVideoLikes: (state, action) => {
     }
 })
 
+.addCase(unfollowUser.rejected, (state, action) => {
+  state.profile.loading = false;
+  state.profile.followError = action.payload?.message || "Failed to unfollow user";
+})
+
 .addCase(fetchFollowingVideos.pending, (state) => {
   state.video.loading = true;
   state.video.error = null;
@@ -688,12 +753,53 @@ updateVideoLikes: (state, action) => {
   state.video.error = action.payload;
 })
 
-.addCase(unfollowUser.rejected, (state, action) => {
+
+.addCase(showDiscoveryvideo.pending, (state) => {
+  state.video.loading = true;
+  state.video.error = null;
+})
+.addCase(showDiscoveryvideo.fulfilled, (state, action) => {
+  state.video.loading = false;
+  state.video.data = action.payload; // Store the videos
+  state.video.error = null;
+})
+.addCase(showDiscoveryvideo.rejected, (state, action) => {
+  state.video.loading = false;
+  state.video.error = action.payload;
+})
+
+
+
+
+// Add this to your extraReducers builder
+.addCase(updateProfile.pending, (state) => {
+  state.profile.loading = true;
+  state.profile.error = null;
+})
+.addCase(updateProfile.fulfilled, (state, action) => {
   state.profile.loading = false;
-  state.profile.followError = action.payload?.message || "Failed to unfollow user";
-});
+  state.profile.user = action.payload;
+  // Also update current user if it's the same user
+  if (state.user && state.user.id === action.payload.id) {
+    state.user = {
+      ...state.user,
+      name: action.payload.name,
+      email: action.payload.email,
+      username: action.payload.username,
+      bio: action.payload.bio,
+      profile_picture: action.payload.profile_picture
+    };
+  }
+})
+.addCase(updateProfile.rejected, (state, action) => {
+  state.profile.loading = false;
+  state.profile.error = action.payload;
+})
+
+;
   }
 });
+
 
 // Exports
 export const { resetAuthState,setToken, logout, setUploadProgress, clearProfile,  updateProfileUser, updateCurrentUser  } = authSlice.actions;

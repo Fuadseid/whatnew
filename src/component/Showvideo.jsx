@@ -362,18 +362,32 @@ const hasUserLiked = (videoId) => {
               </div>
 
               <div className="flex items-center gap-3 mb-8 pointer-events-auto">
+                <button 
+                    onClick={() => {
+                  const token = localStorage.getItem("token");
+                  if (!token) {
+                    navigate("/login");
+                    return;
+                  }
+                  if (video?.user?.id) {
+                    navigate(`/pubprofile/${video.user.id}`);
+                  } else {
+                    console.warn("No user ID available for this video");
+                  }
+                }}>
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500">
                   <span className="text-xl font-bold text-white">
                     {video.user?.name?.charAt(0) || "U"}
                   </span>
                 </div>
+                </button>
                 <div>
                   <p className="text-lg font-medium text-white">
                     @{video.user?.username || "creator"}
                   </p>
-                  <p className="flex items-center gap-1 text-sm text-gray-300">
+                  {/* <p className="flex items-center gap-1 text-sm text-gray-300">
                     <FaMusic className="text-purple-400" /> Original Sound
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>
@@ -384,7 +398,7 @@ const hasUserLiked = (videoId) => {
               } bottom-1/4 flex flex-col items-center gap-6 z-20`}
               onClick={(e) => e.stopPropagation()}
             >
-              <button
+              {/* <button
                 onClick={() => {
                   const token = localStorage.getItem("token");
                   if (!token) {
@@ -403,7 +417,7 @@ const hasUserLiked = (videoId) => {
                   <FaUserCircle className="text-2xl text-white" />
                 </div>
                 <span className="mt-1 text-xs font-medium">Profile</span>
-              </button>
+              </button> */}
 
               <div className="flex flex-col items-center">
             <button
@@ -447,9 +461,9 @@ const hasUserLiked = (videoId) => {
                 </button>
               </div>
 
-              <div className="flex items-center justify-center w-12 h-12 transition-all rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg">
+              {/* <div className="flex items-center justify-center w-12 h-12 transition-all rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg">
                 <FaMusic size={20} className="text-white" />
-              </div>
+              </div> */}
             </div>
 
             {showComments[video.id] && (

@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import  logo  from "../assets/logo-transparent-png.png";
+import { motion } from "framer-motion";
 import { 
   FiHome, 
   FiUser, 
@@ -40,8 +41,8 @@ function Sidebar() {
 
   // Animation variants
   const sidebarVariants = {
-    expanded: { width: "16rem" },
-    collapsed: { width: "5rem" }
+    expanded: { width: "23rem" },
+    collapsed: { width: "8rem" }
   };
 
   const navItemVariants = {
@@ -61,40 +62,35 @@ function Sidebar() {
   };
 
   return (
-    <div
+    <motion.div
       initial={false}
       animate={expanded ? "expanded" : "collapsed"}
       variants={sidebarVariants}
-      className="sticky top-0 flex flex-col h-screen px-6 overflow-hidden text-white bg-gradient-to-b from-gray-900 to-black"
+      className="sticky top-0 flex flex-col h-screen pl-4 overflow-hidden text-white bg-gradient-to-b from-gray-800 to-black"
     >
       {/* Header */}
-
-      <div className="flex items-center justify-between p-4 border-b border-gray-800">
-        <div>
-          {/* {expanded && (
-            <h1
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-2xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text"
-            >
-              {t('appName')}
-            </h1>
-          )} */}
-          {expanded && (
-            <img src={logo} className="w-auto h-12" /> // Show just the logo when collapsed
-          )}
-
-        </div>
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="p-2 transition-colors rounded-lg hover:bg-gray-800"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <FiMenu className="text-xl" />
-        </button>
-      </div>
+<div className="flex items-center justify-between p-4 border-b border-gray-800">
+  <div className="flex items-center gap-2"> {/* Added gap-4 and flex items-center */}
+    {expanded ? (
+      <>
+        <img src={logo} className="w-auto h-12" alt="Logo" />
+        <h1 className="min-w-0 text-2xl font-bold text-transparent whitespace-nowrap bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text">
+          {t('appName')}
+        </h1>
+      </>
+    ) : (
+      <img src={logo} className="w-auto h-8" alt="Logo" />
+    )}
+  </div>
+  <button
+    onClick={() => setExpanded(!expanded)}
+    className="p-2 transition-colors rounded-lg hover:bg-gray-800"
+    whileHover={{ scale: 1.1 }}
+    whileTap={{ scale: 0.9 }}
+  >
+    <FiMenu className="size-5"/>
+  </button>
+</div>
 
       {/* Navigation */}
       <nav className="flex flex-col flex-grow gap-1 p-2">
@@ -118,7 +114,7 @@ function Sidebar() {
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  className={`absolute -top-1 left-[60%] transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full`}
+                  className={`absolute -top-1 left-[29%] transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full`}
                 >
                   {t("newBadge")}
                 </span>
@@ -204,7 +200,7 @@ function Sidebar() {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
