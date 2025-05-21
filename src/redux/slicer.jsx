@@ -357,6 +357,7 @@ export const updateProfile = createAsyncThunk(
       const response = await api.post(`/edit/${userId}`, profileData, {
         headers: {
           Authorization: `Bearer ${auth.token}`,
+          "Content-Type": "multipart/form-data", // Important for file uploads
         },
       });
       return response.data.user;

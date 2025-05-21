@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { FaCamera } from "react-icons/fa";
 import {
   fetchProfile,
   clearProfile,
@@ -40,11 +41,14 @@ const Profile = () => {
   const [modalContent, setModalContent] = useState(null);
   const [modalTitle, setModalTitle] = useState('');
   const [isLoadingModal, setIsLoadingModal] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState(null);
   const [editedData, setEditedData] = useState({
     name: "",
     username: "",
     email: "",
     bio: "",
+    profile_picture: null,
   });
 
   const {
@@ -142,19 +146,47 @@ const Profile = () => {
     }));
   };
 
-  const handleSaveProfile = async () => {
-    try {
-      await dispatch(
-        updateProfile({
-          userId: profileUser.id,
-          profileData: editedData,
-        })
-      ).unwrap();
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Failed to update profile:", error);
+const handleSaveProfile = async () => {
+  try {
+    const formData = new FormData();
+    
+    // Append all edited data
+    Object.keys(editedData).forEach(key => {
+      formData.append(key, editedData[key]);
+    });
+    
+    // Append profile picture if it exists
+    if (profilePicture) {
+      formData.append('profile_picture', profilePicture);
     }
-  };
+
+    await dispatch(
+      updateProfile({
+        userId: profileUser.id,
+        profileData: formData,
+      })
+    ).unwrap();
+    
+    setIsEditing(false);
+    setProfilePicture(null);
+    setProfilePicturePreview(null);
+  } catch (error) {
+    console.error("Failed to update profile:", error);
+  }
+};
+
+// Add this function to handle profile picture changes
+const handleProfilePictureChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setProfilePicture(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfilePicturePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
+};
 
   const handleFollow = async () => {
     if (!currentUser) {
@@ -279,17 +311,18 @@ const Profile = () => {
   const isPrivateProfile = profileUser?.is_private && !isCurrentUser;
   const isFollowing = profileUser?.is_following || false;
 
-  if (loading)
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-purple-500 rounded-full border-t-transparent animate-spin"></div>
-          <div className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-            <div className="w-8 h-8 border-4 border-pink-500 rounded-full border-b-transparent animate-spin animation-delay-200"></div>
-          </div>
-        </div>
-      </div>
-    );
+if (loading)
+  return (
+    <div className={`flex items-center justify-center min-h-screen ${
+      darkMode ? "bg-gray-900" : "bg-gray-50"
+    }`}>
+      <div className={`w-16 h-16 border-4 rounded-full animate-spin ${
+        darkMode 
+          ? "border-purple-500 border-t-transparent" 
+          : "border-purple-400 border-t-transparent"
+      }`}></div>
+    </div>
+  );
 
   if (error)
     return (
@@ -382,6 +415,54 @@ const Profile = () => {
               <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 {isEditing ? (
                   <div className="w-full">
+                    <div className="mb-4">
+      <label className={`block mb-1 text-sm font-medium ${
+        darkMode ? "text-gray-300" : "text-gray-700"
+      }`}>
+        Profile Picture
+      </label>
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <img
+            src={profilePicturePreview || profileUser.profile_picture || "/default-avatar.png"}
+            alt="Preview"
+            className="object-cover w-20 h-20 border rounded-full"
+          />
+          <label
+            htmlFor="profile-picture-upload"
+            className="absolute bottom-0 right-0 p-2 bg-gray-700 rounded-full cursor-pointer hover:bg-gray-600"
+          >
+            <FaCamera className="text-sm text-white" />
+            <input
+              id="profile-picture-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+              className="hidden"
+            />
+          </label>
+        </div>
+        {profilePicture && (
+          <button
+            type="button"
+            onClick={() => {
+              setProfilePicture(null);
+              setProfilePicturePreview(null);
+            }}
+            className={`px-3 py-1 text-sm rounded-lg ${
+              darkMode
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Remove
+          </button>
+        )}
+      </div>
+      <p className="mt-1 text-xs text-gray-500">
+        JPG, PNG or GIF (Max 2MB)
+      </p>
+    </div>
                     <div className="mb-4">
                       <label className={`block mb-1 text-sm font-medium ${
                         darkMode ? "text-gray-300" : "text-gray-700"
