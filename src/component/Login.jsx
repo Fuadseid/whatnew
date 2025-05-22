@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { postLogin, resetAuthState,googleLogin  } from "../redux/slicer";
+import { postLogin, resetAuthState} from "../redux/slicer";
 import { useTranslation } from "react-i18next";
+
 
 function Login() {
   const { t } = useTranslation();
@@ -17,6 +17,8 @@ function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isLoading, error } = useSelector((state) => state.auth);
+
+  
 
   const handleInput = (e) => {
     const { name, value } = e.target;
@@ -65,43 +67,51 @@ function Login() {
       console.error("Login error:", error);
     }
   };
-  const handleGoogleLogin = async () => {
-    try {
-      const result = await dispatch(googleLogin()).unwrap();
-      if (result) {
-        navigate("/showvideo");
-      }
-    } catch (error) {
-      console.error("Google login error:", error);
-    }
-  }
+
+
+
+
+
+  
+
+const handleGoogleLogin = () => {
+  window.location.href = 'http://localhost:8000/auth/google';
+};
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50"
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50"
     >
       <form
-        className="bg-white shadow-xl border border-gray-200 w-full max-w-md flex flex-col space-y-4 p-6 md:p-8 rounded-lg"
+        className="flex flex-col w-full max-w-md p-6 space-y-4 bg-white border border-gray-200 rounded-lg shadow-xl md:p-8"
         onSubmit={handleSubmit}
       >
-        <h1 className="text-center text-2xl font-bold text-gray-800 mb-4">
+        <h1 className="mb-4 text-2xl font-bold text-center text-gray-800">
           {t("title")}
         </h1>
         {/* Add Google Login Button */}
         <div className="mb-4">
-          <button 
-            type="button"
-            onClick={handleGoogleLogin}
-            className="w-full bg-white border border-gray-200 hover:border-gray-300 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-3 shadow-sm"
-          >
-            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
-            <span>{t("continue_with_google")}</span>
-          </button>
-        </div>
+<button
+  type="button"
+  onClick={handleGoogleLogin}
+  disabled={isLoading}
+  className="flex items-center justify-center w-full px-4 py-2 mt-4 font-medium text-white transition-colors bg-red-600 rounded-md hover:bg-red-700"
+>
+  <svg
+    className="w-5 h-5 mr-2"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+  >
+    <path d="M12.545 10.239v3.821h5.445c-0.712 2.315-2.647 3.972-5.445 3.972-3.332 0-6.033-2.701-6.033-6.032s2.701-6.032 6.033-6.032c1.498 0 2.866 0.549 3.921 1.453l2.814-2.814c-1.786-1.667-4.166-2.685-6.735-2.685-5.522 0-10 4.477-10 10s4.478 10 10 10c8.396 0 10-7.524 10-10 0-0.67-0.069-1.325-0.189-1.961h-9.811z" />
+  </svg>
+  {t("login_with_google")}
+</button>
+    </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-            <div className="flex justify-between items-center">
+          <div className="p-4 mb-4 border-l-4 border-red-500 bg-red-50">
+            <div className="flex items-center justify-between">
               <p className="text-red-700">
                 {error.message ||
                   "Login failed. Please check your credentials."}
@@ -132,12 +142,12 @@ function Login() {
             } rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
           />
           {errors.email && (
-            <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            <p className="mt-1 text-xs text-red-500">{errors.email}</p>
           )}
         </div>
 
         <div className="flex flex-col space-y-1">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <label
               htmlFor="password"
               className="text-sm font-medium text-gray-700"
@@ -163,7 +173,7 @@ function Login() {
             } rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
           />
           {errors.password && (
-            <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            <p className="mt-1 text-xs text-red-500">{errors.password}</p>
           )}
         </div>
 
@@ -177,7 +187,7 @@ function Login() {
           {isLoading ? (
             <span className="flex items-center justify-center">
               <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                className="w-4 h-4 mr-2 -ml-1 text-white animate-spin"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -203,11 +213,11 @@ function Login() {
           )}
         </button>
 
-        <p className="text-center text-sm text-gray-600 mt-4">
+        <p className="mt-4 text-sm text-center text-gray-600">
           {t("remember")}?{" "}
           <Link
             to="/register"
-            className="text-blue-600 hover:underline font-medium"
+            className="font-medium text-blue-600 hover:underline"
           >
             {t("create")}
           </Link>

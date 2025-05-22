@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { postRegister, resetAuthState } from "../redux/slicer";
 import { useTranslation } from "react-i18next";
-import { googleLogin } from "../redux/slicer"; 
+// import { googleLogin } from "../redux/slicer"; 
 function Registration() {
   const [formData, setFormData] = useState({
     name: "",
@@ -131,15 +131,15 @@ function Registration() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4"
+      className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-50 to-gray-100"
     >
       <div className="w-full max-w-md">
         {/* Header with logo placeholder */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-xl">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 text-blue-600"
+              className="w-8 h-8 text-blue-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -153,7 +153,7 @@ function Registration() {
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-gray-800">{t("title")}</h1>
-          <p className="text-gray-500 mt-2">{t("subtitle")}</p>
+          <p className="mt-2 text-gray-500">{t("subtitle")}</p>
         </div>
 
         {/* Social Login */}
@@ -172,7 +172,7 @@ function Registration() {
         {/* Divider */}
         <div className="flex items-center my-6">
           <div className="flex-1 border-t border-gray-300"></div>
-          <span className="px-3 text-gray-500 text-sm">
+          <span className="px-3 text-sm text-gray-500">
             or register with email
           </span>
           <div className="flex-1 border-t border-gray-300"></div>
@@ -180,7 +180,7 @@ function Registration() {
 
         {/* Form */}
         <form
-          className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-200"
+          className="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-xl"
           onSubmit={handleSubmit}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -191,15 +191,15 @@ function Registration() {
               <div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded"
+                className="p-4 mb-6 border-l-4 border-red-500 rounded bg-red-50"
               >
-                <div className="flex justify-between items-center">
-                  <p className="text-red-700 text-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-red-700">
                     {error.message || "Registration failed"}
                   </p>
                   <button
                     onClick={() => dispatch(resetAuthState())}
-                    className="text-red-500 hover:text-red-700 text-lg"
+                    className="text-lg text-red-500 hover:text-red-700"
                   >
                     &times;
                   </button>
@@ -207,11 +207,11 @@ function Registration() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 gap-4 mb-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label
                   htmlFor="name"
-                  className="text-sm font-medium text-gray-700 block"
+                  className="block text-sm font-medium text-gray-700"
                 >
                   {t("name")}
                 </label>
@@ -227,14 +227,14 @@ function Registration() {
                   } rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
                 />
                 {errors.name && (
-                  <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                  <p className="mt-1 text-xs text-red-500">{errors.name}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <label
                   htmlFor="username"
-                  className="text-sm font-medium text-gray-700 block"
+                  className="block text-sm font-medium text-gray-700"
                 >
                   {t("username")}
                 </label>
@@ -250,15 +250,15 @@ function Registration() {
                   } rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
                 />
                 {errors.username && (
-                  <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+                  <p className="mt-1 text-xs text-red-500">{errors.username}</p>
                 )}
               </div>
             </div>
 
-            <div className="space-y-2 mb-4">
+            <div className="mb-4 space-y-2">
               <label
                 htmlFor="email"
-                className="text-sm font-medium text-gray-700 block"
+                className="block text-sm font-medium text-gray-700"
               >
                 {t("email")}
               </label>
@@ -274,15 +274,15 @@ function Registration() {
                 } rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
               />
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                <p className="mt-1 text-xs text-red-500">{errors.email}</p>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 gap-4 mb-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label
                   htmlFor="password"
-                  className="text-sm font-medium text-gray-700 block"
+                  className="block text-sm font-medium text-gray-700"
                 >
                   {t("password")}
                 </label>
@@ -298,14 +298,14 @@ function Registration() {
                   } rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
                 />
                 {errors.password && (
-                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                  <p className="mt-1 text-xs text-red-500">{errors.password}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <label
                   htmlFor="confirm_password"
-                  className="text-sm font-medium text-gray-700 block"
+                  className="block text-sm font-medium text-gray-700"
                 >
                   {t("confirm_password")}
                 </label>
@@ -323,17 +323,17 @@ function Registration() {
                   } rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
                 />
                 {errors.confirm_password && (
-                  <p className="text-red-500 text-xs mt-1">
+                  <p className="mt-1 text-xs text-red-500">
                     {errors.confirm_password}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="space-y-2 mb-6">
+            <div className="mb-6 space-y-2">
               <label
                 htmlFor="user_type"
-                className="text-sm font-medium text-gray-700 block"
+                className="block text-sm font-medium text-gray-700"
               >
                 {t("user_type")}
               </label>
@@ -361,7 +361,7 @@ function Registration() {
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg
-                    className="animate-spin h-5 w-5 text-white"
+                    className="w-5 h-5 text-white animate-spin"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -388,12 +388,12 @@ function Registration() {
             </button>
           </div>
 
-          <div className="bg-gray-50 px-6 py-4 text-center border-t border-gray-200">
-            <p className="text-gray-600 text-sm">
+          <div className="px-6 py-4 text-center border-t border-gray-200 bg-gray-50">
+            <p className="text-sm text-gray-600">
               {t("login_link")}?{" "}
               <Link
                 to="/login"
-                className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
               >
                 {t("sign_in")}
               </Link>

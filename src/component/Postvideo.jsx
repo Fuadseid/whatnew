@@ -61,8 +61,8 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
       const chunk = file.slice(start, start + chunkSize);
       const formData = new FormData();
 
-      formData.append("video_chunk", chunk);
-      formData.append("totalChunks", totalChunks);
+      formData.append("file", chunk);  // Instead of "video_chunk"
+      formData.append("filename", file.name);  // Add this      formData.append("totalChunks", totalChunks);
       formData.append("title", title);
       formData.append("description", description);
       formData.append("location", location); 
@@ -98,15 +98,15 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-xl border border-gray-100">
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+    <div className="max-w-2xl p-6 mx-auto border border-gray-100 shadow-xl bg-gradient-to-br from-gray-50 to-white rounded-xl">
+      <div className="mb-8 text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 mb-4 bg-blue-100 rounded-full">
           <FiYoutube className="w-8 h-8 text-blue-600" />
         </div>
         <h2 className="text-3xl font-bold text-gray-800 bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
           {label || t('header.title')}
         </h2>
-        <p className="text-gray-600 mt-2 text-lg">
+        <p className="mt-2 text-lg text-gray-600">
          {t('header.subtitle')}
         </p>
       </div>
@@ -125,7 +125,7 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
               +
             </div>
           </div>
-          <p className="text-gray-700 font-medium">
+          <p className="font-medium text-gray-700">
             {file ? (
               <span className="text-blue-600">{file.name}</span>
             ) : (
@@ -157,7 +157,7 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
         <div className="flex items-center justify-between bg-blue-50 p-4 rounded-lg mb-6 border border-blue-100 transform hover:scale-[1.005] transition-transform">
           <div className="flex items-center space-x-4">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <FiFilm className="text-blue-600 text-xl" />
+              <FiFilm className="text-xl text-blue-600" />
             </div>
             <div>
               <p className="font-medium text-gray-800">{file.name}</p>
@@ -166,7 +166,7 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
           </div>
           <button 
             onClick={() => setFile(null)} 
-            className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+            className="p-1 text-gray-400 transition-colors rounded-full hover:text-red-500 hover:bg-red-50"
           >
             <FiXCircle className="w-5 h-5" />
           </button>
@@ -175,26 +175,26 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
 
       {/* Thumbnail Upload */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">{t('thumbnail.label')}</label>
+        <label className="block mb-3 text-sm font-medium text-gray-700">{t('thumbnail.label')}</label>
         <div className="flex items-center space-x-4">
           {thumbnail ? (
-            <div className="group relative">
+            <div className="relative group">
               <img 
                 src={URL.createObjectURL(thumbnail)} 
                 alt="Thumbnail preview" 
-                className="w-20 h-20 object-cover rounded-lg border border-gray-200 group-hover:border-blue-300 transition-colors"
+                className="object-cover w-20 h-20 transition-colors border border-gray-200 rounded-lg group-hover:border-blue-300"
               />
               <button 
                 onClick={() => setThumbnail(null)} 
-                className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow-sm text-gray-400 hover:text-red-500 transition-colors"
+                className="absolute p-1 text-gray-400 transition-colors bg-white rounded-full shadow-sm -top-2 -right-2 hover:text-red-500"
               >
                 <FiXCircle className="w-4 h-4" />
               </button>
             </div>
           ) : (
-            <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors group">
-              <div className="p-2 bg-gray-100 rounded-full group-hover:bg-blue-50 transition-colors">
-                <FiImage className="text-gray-400 group-hover:text-blue-500 transition-colors" />
+            <label className="flex flex-col items-center justify-center w-20 h-20 transition-colors border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-blue-400 group">
+              <div className="p-2 transition-colors bg-gray-100 rounded-full group-hover:bg-blue-50">
+                <FiImage className="text-gray-400 transition-colors group-hover:text-blue-500" />
               </div>
               <input 
                 type="file" 
@@ -216,7 +216,7 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
 
       {/* Title Input */}
       <div className="mb-5">
-        <label className=" text-sm font-medium text-gray-700 mb-2 flex items-center">
+        <label className="flex items-center mb-2 text-sm font-medium text-gray-700 ">
           <span>{t('form.title.label')}</span>
           <span className="ml-1 text-xs text-gray-400">{t('form.required')}</span>
         </label>
@@ -225,14 +225,14 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
           placeholder={t('form.title.placeholder')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-gray-400"
+          className="w-full p-3 transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-400"
         />
         <p className="mt-1 text-xs text-gray-500">{t('form.title.hint')}</p>
       </div>
 
       {/* Description Input */}
       <div className="mb-7">
-        <label className=" text-sm font-medium text-gray-700 mb-2 flex items-center">
+        <label className="flex items-center mb-2 text-sm font-medium text-gray-700 ">
           <span>{t('form.description.label')}</span>
           <span className="ml-1 text-xs text-gray-400">{t('form.required')}</span>
         </label>
@@ -240,7 +240,7 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
           placeholder={t('form.description.placeholder')}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-gray-400"
+          className="w-full p-3 transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-400"
           rows="4"
         />
         <p className="mt-1 text-xs text-gray-500">{t('form.description.hint')}</p>
@@ -248,8 +248,8 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
 
       {/* Error Message */}
       {error && (
-        <div className="flex items-center p-4 mb-5 text-sm text-red-700 bg-red-50 rounded-lg border border-red-100">
-          <FiXCircle className="mr-3 flex-shrink-0" />
+        <div className="flex items-center p-4 mb-5 text-sm text-red-700 border border-red-100 rounded-lg bg-red-50">
+          <FiXCircle className="flex-shrink-0 mr-3" />
           <span>{error}</span>
         </div>
       )}
@@ -257,7 +257,7 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
       {/* Progress Bar */}
       {progress > 0 && progress < 100 && (
         <div className="mb-6 animate-pulse">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
+          <div className="flex justify-between mb-2 text-sm text-gray-600">
             <span>{t('progress.uploading')}</span>
             <span>{Math.round(progress)}%</span>
           </div>
@@ -279,7 +279,7 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
       >
         {loading ? (
           <>
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 mr-3 -ml-1 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -287,7 +287,7 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
           </>
         ) : (
           <>
-            <FiUpload className="mr-2 w-5 h-5" />
+            <FiUpload className="w-5 h-5 mr-2" />
             <span className="text-lg">{t('upload.postButton')}</span>
           </>
         )}
@@ -295,19 +295,19 @@ function PostVideo({ onUploadComplete, label, validation, location }) {
 
       {/* Success Message */}
       {progress === 100 && (
-        <div className="mt-5 p-4 flex items-center text-sm text-green-700 bg-green-50 rounded-lg border border-green-100 animate-in fade-in">
-          <FiCheckCircle className="mr-3 flex-shrink-0 w-5 h-5" />
+        <div className="flex items-center p-4 mt-5 text-sm text-green-700 border border-green-100 rounded-lg bg-green-50 animate-in fade-in">
+          <FiCheckCircle className="flex-shrink-0 w-5 h-5 mr-3" />
           <div>
             <p className="font-medium">{t('upload.success')}</p>
-            <p className="text-xs text-green-600 mt-1">{t('upload.processing')}</p>
+            <p className="mt-1 text-xs text-green-600">{t('upload.processing')}</p>
           </div>
         </div>
       )}
 
       {/* Tips Section */}
       {!file && (
-        <div className="mt-8 pt-6 border-t border-gray-100">
-          <h3 className="text-sm font-medium text-gray-500 mb-3">{t('tips.title')}</h3>
+        <div className="pt-6 mt-8 border-t border-gray-100">
+          <h3 className="mb-3 text-sm font-medium text-gray-500">{t('tips.title')}</h3>
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex items-start">
               <span className="mr-2 text-blue-500">•</span>

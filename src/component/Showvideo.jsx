@@ -1,41 +1,39 @@
 import { useDispatch, useSelector } from "react-redux";
-import { showvideo, selectVideoState } from "../redux/slicer";
+import { showvideo, selectVideoState, checkAuth } from "../redux/slicer";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  FiHeart,
-  FiMessageSquare,
-  FiShare2,
-  FiMusic,
-  FiChevronUp,
-  FiChevronDown,
-} from "react-icons/fi";
 import {
   FaHeart,
   FaRegHeart,
   FaComment,
   FaShare,
   FaMusic,
+  FaUserCircle,
 } from "react-icons/fa";
 import i18n from "../i18n/i18n";
+import axios from "axios";
 
 function Showvideo() {
   const dispatch = useDispatch();
   const { data, loading, error } = useSelector(selectVideoState);
+  const auth = useSelector(state => state.auth);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const videoRefs = useRef([]);
   const containerRef = useRef();
   const isAuthenticated = useSelector(
     (state) => state.auth.isAuthenticated ?? false
   );
-  const [likedVideos, setLikedVideos] = useState({});
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState({});
   const [commentText, setCommentText] = useState("");
+  const [postingComment, setPostingComment] = useState(false);
+  const [likingVideo, setLikingVideo] = useState(false);
 
   const navigate = useNavigate();
+
   useEffect(() => {
     document.body.dir = i18n.dir(i18n.language);
   }, [i18n, i18n.language]);
+
   const [isPlaying, setIsPlaying] = useState(() => {
     const initialStates = Array(data?.length || 0).fill(false);
     initialStates[0] = true;
@@ -43,22 +41,23 @@ function Showvideo() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
       navigate("/login");
-    } else {
-      dispatch(showvideo())
+      return;
+    }
+
+    if (!isAuthenticated) {
+      dispatch(checkAuth())
         .unwrap()
-        .then((data) => {
-          console.log("Received data:", data);
-          const initialStates = Array(data.length).fill(false);
-          initialStates[0] = true;
-          setIsPlaying(initialStates);
-        })
-        .catch((err) => console.error("Error:", err));
+        .then(() => dispatch(showvideo()))
+        .catch(() => navigate("/login"));
+    } else {
+      dispatch(showvideo());
     }
   }, [dispatch, isAuthenticated, navigate]);
 
-  // Handle scroll events
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -69,7 +68,6 @@ function Showvideo() {
       const newIndex = Math.round(scrollPosition / containerHeight);
 
       if (newIndex !== currentVideoIndex) {
-        // Pause previous video
         if (videoRefs.current[currentVideoIndex]) {
           videoRefs.current[currentVideoIndex].pause();
           setIsPlaying((prev) => {
@@ -79,7 +77,6 @@ function Showvideo() {
           });
         }
 
-        // Play new video
         setCurrentVideoIndex(newIndex);
         if (videoRefs.current[newIndex]) {
           videoRefs.current[newIndex]
@@ -119,11 +116,78 @@ function Showvideo() {
     }
   };
 
-  const toggleLike = (videoId) => {
-    setLikedVideos((prev) => ({
-      ...prev,
-      [videoId]: !prev[videoId],
-    }));
+const toggleLike = async (videoId) => {
+  if (likingVideo) return;
+  
+  try {
+    setLikingVideo(true);
+    const token = localStorage.getItem("token");
+    
+    const video = data.find(v => v.id === videoId);
+    const isLiked = hasUserLiked(videoId);
+    
+    let response;
+    
+    if (isLiked) {
+      response = await axios.post(
+        `http://localhost:8000/api/unlike/${videoId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } else {
+      response = await axios.post(
+        `http://localhost:8000/api/like/${videoId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    }
+
+    dispatch({
+      type: "auth/updateVideoLikes",
+      payload: {
+        videoId,
+        likeCount: response.data.likes_count,
+        isLiked: !isLiked,
+        userId: auth.user?.id
+      }
+    });
+
+  } catch (error) {
+    console.error("Error toggling like:", error);
+  } finally {
+    setLikingVideo(false);
+  }
+};
+
+// In your Showvideo component
+
+// Update the hasUserLiked function to be more robust
+const hasUserLiked = (videoId) => {
+  const video = data?.find(v => v.id === videoId);
+  
+  // First check for explicit is_liked flag
+  if (typeof video?.is_liked === 'boolean') {
+    return video.is_liked;
+  }
+  
+  // Fallback to checking likes array
+  if (video?.likes && auth.user?.id) {
+    return video.likes.some(like => like.user_id === auth.user.id);
+  }
+  
+  return false;
+};
+  const getLikeCount = (videoId) => {
+    const video = data?.find(v => v.id === videoId);
+    return video?.like_count || 0;
   };
 
   const scrollToVideo = (direction) => {
@@ -142,44 +206,82 @@ function Showvideo() {
     });
   };
 
-  const handleCommentSubmit = (e, videoId) => {
+  const getVideoComments = (videoId) => {
+    const video = data?.find(v => v.id === videoId);
+    return video?.comments || [];
+  };
+
+  const toggleComments = (videoId) => {
+    setShowComments((prev) => ({
+      ...prev,
+      [videoId]: !prev[videoId]
+    }));
+  };
+
+  const handleCommentSubmit = async (e, videoId) => {
     e.preventDefault();
-    // Add comment logic here
-    console.log(`Comment on video ${videoId}:`, commentText);
-    setCommentText("");
+    if (!commentText.trim()) return;
+    
+    try {
+      setPostingComment(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `http://localhost:8000/api/comment/${videoId}`,
+        { comment: commentText },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      dispatch({
+        type: "auth/updateVideoWithComment",
+        payload: {
+          videoId,
+          comment: response.data.comment
+        }
+      });
+
+      setCommentText("");
+    } catch (error) {
+      console.error("Error posting comment:", error);
+    } finally {
+      setPostingComment(false);
+    }
   };
 
   if (loading)
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900">
-        <div className="w-16 h-16 border-4 border-t-transparent border-purple-500 rounded-full animate-spin" />
+        <div className="w-16 h-16 border-4 border-purple-500 rounded-full border-t-transparent animate-spin" />
       </div>
     );
 
   if (error)
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-red-500">
+      <div className="flex items-center justify-center h-screen text-red-500 bg-gray-900">
         Error: {error.message}
       </div>
     );
 
   if (!Array.isArray(data))
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
+      <div className="flex items-center justify-center h-screen text-white bg-gray-900">
         No data received from server
       </div>
     );
 
   if (data.length === 0)
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
+      <div className="flex items-center justify-center h-screen text-white bg-gray-900">
         No videos available
       </div>
     );
 
   return (
-    <div className="flex h-screen w-full bg-black overflow-hidden">
-      {/* Global styles for hiding scrollbar */}
+    <div className="flex w-full h-screen overflow-hidden bg-black">
       <style jsx global>{`
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
@@ -190,24 +292,21 @@ function Showvideo() {
         }
       `}</style>
 
-      {/* Main Video Feed */}
       <div
         ref={containerRef}
-        className="flex-1 h-full overflow-y-scroll scroll-smooth relative hide-scrollbar"
+        className="relative flex-1 h-full overflow-y-scroll scroll-smooth hide-scrollbar"
         style={{ scrollSnapType: "y mandatory" }}
       >
         {data.map((video, index) => (
           <div
             key={video.id}
-            className="relative w-full h-screen flex justify-center items-center"
+            className="relative flex items-center justify-center w-full h-screen"
             style={{ scrollSnapAlign: "start" }}
           >
-            {/* Video Background Blur */}
             <div className="absolute inset-0 bg-black/30 backdrop-blur-lg" />
 
-            {/* Video Player with perfect sizing */}
             <div
-              className="relative w-full h-full flex justify-center items-center"
+              className="relative flex items-center justify-center w-full h-full"
               onClick={() => togglePlayPause(index)}
             >
               <video
@@ -216,20 +315,19 @@ function Showvideo() {
                 autoPlay={index === 0}
                 playsInline
                 loop
-                className="w-full h-full object-contain"
+                className="object-contain w-full h-full"
               >
-                <source src={video.video_url} type="video/mp4" />
+                <source src={video.url} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             </div>
 
-            {/* Play/Pause overlay - only shown when paused */}
             {!isPlaying[index] && (
               <div
-                className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer"
+                className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer"
                 onClick={() => togglePlayPause(index)}
               >
-                <div className="w-20 h-20 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/70 transition-all">
+                <div className="flex items-center justify-center w-20 h-20 transition-all rounded-full bg-black/50 hover:bg-black/70">
                   <svg
                     className="w-10 h-10 text-white"
                     fill="currentColor"
@@ -241,13 +339,12 @@ function Showvideo() {
               </div>
             )}
 
-            {/* Video Info Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6 pointer-events-none">
+            <div className="absolute inset-0 flex flex-col justify-end p-6 pointer-events-none bg-gradient-to-t from-black/80 via-transparent to-transparent">
               <div className="mb-6 pointer-events-auto">
-                <h3 className="text-2xl font-bold text-white mb-2">
+                <h3 className="mb-2 text-2xl font-bold text-white">
                   {video.title}
                 </h3>
-                <p className="text-gray-300 mb-4 text-lg">
+                <p className="mb-4 text-lg text-gray-300">
                   {video.description}
                 </p>
                 <div className="flex items-center gap-4 text-sm text-gray-300">
@@ -264,119 +361,236 @@ function Showvideo() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 pointer-events-auto mb-8">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">
+              <div className="flex items-center gap-3 mb-8 pointer-events-auto">
+                <button 
+                    onClick={() => {
+                  const token = localStorage.getItem("token");
+                  if (!token) {
+                    navigate("/login");
+                    return;
+                  }
+                  if (video?.user?.id) {
+                    navigate(`/pubprofile/${video.user.id}`);
+                  } else {
+                    console.warn("No user ID available for this video");
+                  }
+                }}>
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500">
+                  <span className="text-xl font-bold text-white">
                     {video.user?.name?.charAt(0) || "U"}
                   </span>
                 </div>
+                </button>
                 <div>
-                  <p className="text-white font-medium text-lg">
+                  <p className="text-lg font-medium text-white">
                     @{video.user?.username || "creator"}
                   </p>
-                  <p className="text-gray-300 text-sm flex items-center gap-1">
+                  {/* <p className="flex items-center gap-1 text-sm text-gray-300">
                     <FaMusic className="text-purple-400" /> Original Sound
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>
 
-            {/* Action Buttons - Right Side */}
             <div
               className={`absolute ${
                 i18n.dir(i18n.language) === "rtl" ? "left-4" : "right-4"
               } bottom-1/4 flex flex-col items-center gap-6 z-20`}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* <button
+                onClick={() => {
+                  const token = localStorage.getItem("token");
+                  if (!token) {
+                    navigate("/login");
+                    return;
+                  }
+                  if (video?.user?.id) {
+                    navigate(`/pubprofile/${video.user.id}`);
+                  } else {
+                    console.warn("No user ID available for this video");
+                  }
+                }}
+                className="flex flex-col items-center group"
+              >
+                <div className="p-3 transition-all rounded-full bg-black/30 hover:bg-black/50 group-hover:scale-110">
+                  <FaUserCircle className="text-2xl text-white" />
+                </div>
+                <span className="mt-1 text-xs font-medium">Profile</span>
+              </button> */}
+
+              <div className="flex flex-col items-center">
+            <button
+              className="flex flex-col items-center text-white"
+              onClick={() => toggleLike(video.id)}
+              disabled={likingVideo}
+            >
+              <div className="p-3 transition-all rounded-full bg-black/30 hover:bg-black/50">
+                {hasUserLiked(video.id) ? (
+                  <FaHeart className="text-2xl text-red-500" />
+                ) : (
+                  <FaRegHeart className="text-2xl text-white" />
+                )}
+              </div>
+              <span className="mt-1 text-xs font-medium">
+                {getLikeCount(video.id).toLocaleString()}
+              </span>
+            </button>
+              </div>
+
               <div className="flex flex-col items-center">
                 <button
                   className="flex flex-col items-center text-white"
-                  onClick={() => toggleLike(video.id)}
+                  onClick={() => toggleComments(video.id)}
                 >
-                  <div className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all">
-                    {likedVideos[video.id] ? (
-                      <FaHeart className="text-red-500 text-2xl" />
-                    ) : (
-                      <FaRegHeart className="text-white text-2xl" />
-                    )}
+                  <div className="p-3 transition-all rounded-full bg-black/30 hover:bg-black/50">
+                    <FaComment className="text-2xl text-white" />
                   </div>
-                  <span className="text-xs mt-1 font-medium">
-                    {likedVideos[video.id] ? "24.6K" : "24.5K"}
+                  <span className="mt-1 text-xs font-medium">
+                    {getVideoComments(video.id).length || "0"}
                   </span>
                 </button>
               </div>
 
               <div className="flex flex-col items-center">
-                <button
-                  className="flex flex-col items-center text-white"
-                  onClick={() => setShowComments(!showComments)}
-                >
-                  <div className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all">
-                    <FaComment className="text-white text-2xl" />
-                  </div>
-                  <span className="text-xs mt-1 font-medium">1.2K</span>
-                </button>
-              </div>
-
-              <div className="flex flex-col items-center">
                 <button className="flex flex-col items-center text-white">
-                  <div className="p-3 bg-black/30 rounded-full hover:bg-black/50 transition-all">
-                    <FaShare className="text-white text-2xl" />
+                  <div className="p-3 transition-all rounded-full bg-black/30 hover:bg-black/50">
+                    <FaShare className="text-2xl text-white" />
                   </div>
-                  <span className="text-xs mt-1 font-medium">Share</span>
+                  <span className="mt-1 text-xs font-medium">Share</span>
                 </button>
               </div>
 
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center hover:shadow-lg transition-all">
-                <FiMusic size={20} className="text-white" />
-              </div>
+              {/* <div className="flex items-center justify-center w-12 h-12 transition-all rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg">
+                <FaMusic size={20} className="text-white" />
+              </div> */}
             </div>
 
-            {/* Comments Section */}
-            {showComments && (
+            {showComments[video.id] && (
               <div
                 className={`absolute ${
                   i18n.dir(i18n.language) === "rtl" ? "left-20" : "right-20"
-                } bottom-20 w-1/4 h-72 bg-black/70 rounded-lg overflow-y-scroll`}
+                } bottom-20 w-1/4 h-72 bg-black/70 rounded-lg overflow-hidden flex flex-col border border-gray-700`}
               >
-                <div className="p-4 text-white">
-                  <form
-                    className="flex flex-col gap-2"
-                    onSubmit={(e) => handleCommentSubmit(e, video.id)}
+                <div className="flex items-center justify-between p-3 border-b border-gray-700">
+                  <h3 className="font-semibold text-white">Comments</h3>
+                  <button 
+                    onClick={() => setShowComments(prev => ({ ...prev, [video.id]: false }))}
+                    className="text-gray-400 hover:text-white"
                   >
-                    <textarea
+                    ×
+                  </button>
+                </div>
+                
+                <div className="flex-1 p-3 space-y-3 overflow-y-auto">
+                  {getVideoComments(video.id).length > 0 ? (
+                    getVideoComments(video.id).map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="flex gap-2 text-white"
+                      >
+                        <div className="flex-shrink-0">
+                          {comment.user?.profile_picture ? (
+                            <img
+                              src={comment.user.profile_picture}
+                              alt={comment.user.name}
+                              className="object-cover w-8 h-8 rounded-full"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center w-8 h-8 bg-purple-500 rounded-full">
+                              <span className="text-xs">
+                                {comment.user?.name?.charAt(0) || "U"}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold">
+                            @{comment.user?.username || "user"}
+                          </div>
+                          <div className="text-sm">{comment.comment}</div>
+                          <div className="mt-1 text-xs text-gray-400">
+                            {new Date(comment.created_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-4 text-center text-gray-400">
+                      No comments yet
+                    </div>
+                  )}
+                </div>
+
+                <form
+                  onSubmit={(e) => handleCommentSubmit(e, video.id)}
+                  className="p-3 border-t border-gray-700"
+                >
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
                       value={commentText}
                       onChange={(e) => setCommentText(e.target.value)}
-                      className="w-full p-2 bg-gray-800 text-white rounded-md"
-                      placeholder="Add a comment"
+                      className="flex-1 px-4 py-2 text-sm text-white bg-gray-800 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="Add a comment..."
+                      disabled={postingComment}
                     />
                     <button
                       type="submit"
-                      className="p-2 bg-purple-500 rounded-md text-white mt-2"
+                      disabled={!commentText.trim() || postingComment}
+                      className="px-4 py-2 text-sm text-white bg-purple-500 rounded-full hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Post Comment
+                      {postingComment ? "Posting..." : "Post"}
                     </button>
-                  </form>
-                </div>
+                  </div>
+                </form>
               </div>
             )}
           </div>
         ))}
       </div>
 
-      {/* Side Navigation */}
-      <div className="w-16 bg-black flex flex-col justify-center items-center">
+      <div className="flex flex-col items-center justify-center w-16 bg-black">
         <button
           onClick={() => scrollToVideo("up")}
-          className="p-2 text-white hover:bg-gray-800 rounded-full mb-6"
+          className="p-2 mb-6 text-white rounded-full hover:bg-gray-800"
         >
-          <FiChevronUp size={24} />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 15l7-7 7 7"
+            />
+          </svg>
         </button>
         <button
           onClick={() => scrollToVideo("down")}
-          className="p-2 text-white hover:bg-gray-800 rounded-full"
+          className="p-2 text-white rounded-full hover:bg-gray-800"
         >
-          <FiChevronDown size={24} />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
         </button>
       </div>
     </div>
