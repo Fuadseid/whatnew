@@ -15,10 +15,92 @@ const setAuthToken = (token) => {
   }
 };
 
+
 const token = localStorage.getItem("token");
 if (token) {
   setAuthToken(token);
 }
+
+
+
+
+export const postLogin = createAsyncThunk(
+  "auth/login",
+  async ({ email, password }, { rejectWithValue }) => {
+    try {
+      const response = await api.post("/login", { email, password });
+      setAuthToken(response.data.token);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || {
+          message: "Login failed. Please check your credentials.",
+        }
+      );
+    }
+  }
+);
+
+export const postRegister = createAsyncThunk(
+  "auth/register",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await api.post("/register", userData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || {
+          message: "Registration failed. Please try again.",
+        }
+      );
+    }
+  }
+);
+
+export const checkAuth = createAsyncThunk(
+  "auth/check",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return rejectWithValue({ message: "No token found" });
+
+      const response = await api.get("/me");
+      return response.data;
+    } catch (error) {
+      setAuthToken(null);
+      return rejectWithValue(
+        error.response?.data || {
+          message: "Session expired. Please login again.",
+        }
+      );
+    }
+  }
+);
+
+
+
+
+
+
+// Google Authentication
+export const googleLogin = createAsyncThunk(
+  "auth/googleLogin",
+  async (_, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await api.get("/auth/google/callback");
+      const { token, user } = response.data;
+      
+      // Set token immediately
+      setAuthToken(token);
+      dispatch(setToken(token));
+      
+      return { token, user };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 
 export const forgetPassword = createAsyncThunk(
   "auth/forgetPassword",
@@ -35,6 +117,34 @@ export const forgetPassword = createAsyncThunk(
     }
   }
 );
+
+
+
+export const resetPassword = createAsyncThunk(
+  "auth/resetPassword",
+  async (
+    { email, password, password_confirmation, token },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await api.post("/reset-password", {
+        email,
+        password,
+        password_confirmation,
+        token,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || {
+          message: "Password reset failed. Please try again.",
+        }
+      );
+    }
+  }
+);
+
+
 
 export const showvideo = createAsyncThunk(
   "video/showAll",
@@ -127,101 +237,8 @@ export const postvideo = createAsyncThunk(
 );
 
 
-export const resetPassword = createAsyncThunk(
-  "auth/resetPassword",
-  async (
-    { email, password, password_confirmation, token },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.post("/reset-password", {
-        email,
-        password,
-        password_confirmation,
-        token,
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || {
-          message: "Password reset failed. Please try again.",
-        }
-      );
-    }
-  }
-);
 
-// Google Authentication
-export const googleLogin = createAsyncThunk(
-  "auth/googleLogin",
-  async (_, { rejectWithValue, dispatch }) => {
-    try {
-      const response = await api.get("/auth/google/callback");
-      const { token, user } = response.data;
-      
-      // Set token immediately
-      setAuthToken(token);
-      dispatch(setToken(token));
-      
-      return { token, user };
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
 
-export const postLogin = createAsyncThunk(
-  "auth/login",
-  async ({ email, password }, { rejectWithValue }) => {
-    try {
-      const response = await api.post("/login", { email, password });
-      setAuthToken(response.data.token);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || {
-          message: "Login failed. Please check your credentials.",
-        }
-      );
-    }
-  }
-);
-
-export const postRegister = createAsyncThunk(
-  "auth/register",
-  async (userData, { rejectWithValue }) => {
-    try {
-      const response = await api.post("/register", userData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || {
-          message: "Registration failed. Please try again.",
-        }
-      );
-    }
-  }
-);
-
-export const checkAuth = createAsyncThunk(
-  "auth/check",
-  async (_, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return rejectWithValue({ message: "No token found" });
-
-      const response = await api.get("/me");
-      return response.data;
-    } catch (error) {
-      setAuthToken(null);
-      return rejectWithValue(
-        error.response?.data || {
-          message: "Session expired. Please login again.",
-        }
-      );
-    }
-  }
-);
 
 
 
@@ -668,12 +685,12 @@ updateVideoLikes: (state, action) => {
         state.profile.error = null;
       })
       // In your Redux slice (authSlice.js or similar)
-.addCase(fetchProfile.fulfilled, (state, action) => {
-  state.profile.loading = false;
-  state.profile.user = action.payload.user; // Store exactly what came from API
-  state.profile.videos = action.payload.videos;
-  state.profile.likes = action.payload.likes;
-})
+    .addCase(fetchProfile.fulfilled, (state, action) => {
+      state.profile.loading = false;
+      state.profile.user = action.payload.user; // Store exactly what came from API
+      state.profile.videos = action.payload.videos || [];
+      state.profile.likes = action.payload.likes;
+    })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.profile.loading = false;
         state.profile.error = action.payload?.message || action.error.message;
